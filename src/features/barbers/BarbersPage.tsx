@@ -8,16 +8,14 @@ import { useCurrentShop } from '@/app/shop-context';
 import { mad, minutes, pct } from '@/lib/format';
 import { BarberScore } from '@/ui/BarberScore';
 import { Button, IconButton } from '@/ui/Button';
-import { ChipGroup, Empty, Failure } from '@/ui/controls';
+import { Empty, Failure } from '@/ui/controls';
 import { Select } from '@/ui/Field';
 import { PageHeader } from '@/ui/PageHeader';
 import { Portrait } from '@/ui/Portrait';
 import { AddBarberDialog } from './AddBarberDialog';
 import { BarberSheet } from './BarberSheet';
-import { health, needsAttention } from './health';
 import './Barbers.css';
 
-type Filter = 'all' | 'attention';
 type Sort = 'revenue' | 'bookings' | 'score';
 
 const SORTS: Record<Sort, { label: string; key: (b: Barber) => number }> = {
@@ -42,7 +40,6 @@ export function BarbersPage() {
 	const [text, setText] = useState('');
 	const [search, setSearch] = useState('');
 	const [page, setPage] = useState(1);
-	const [filter, setFilter] = useState<Filter>('all');
 	const [sort, setSort] = useState<Sort>('revenue');
 	const [adding, setAdding] = useState(false);
 	const nameOf = useBarberNames();
@@ -57,10 +54,9 @@ export function BarbersPage() {
 
 	const { data, isPending, isFetching, error, refetch } = useBarbers(shop.id, { search, page, page_size: 20 });
 	const all = data?.results ?? [];
-	const watch = all.filter(needsAttention).length;
 	const rows = useMemo(
-		() => all.filter((b) => filter === 'all' || needsAttention(b)).sort((a, b) => SORTS[sort].key(b) - SORTS[sort].key(a)),
-		[all, filter, sort]
+		() => [...all].sort((a, b) => SORTS[sort].key(b) - SORTS[sort].key(a)),
+		[all, sort]
 	);
 
 	const openId = Number(params.get('barbier')) || null;
@@ -90,15 +86,6 @@ export function BarbersPage() {
 						</IconButton>
 					)}
 				</label>
-				<ChipGroup
-					label="Filtrer"
-					value={filter}
-					onChange={setFilter}
-					options={[
-						{ value: 'all', label: 'Tous', count: all.length },
-						{ value: 'attention', label: 'À surveiller', count: watch }
-					]}
-				/>
 				<label className="sort">
 					<span>Trier par</span>
 					<Select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
@@ -118,26 +105,24 @@ export function BarbersPage() {
 					<div className="team-wait" />
 				) : rows.length === 0 ? (
 					<Empty
-						title={search ? `Aucun barbier ne s’appelle « ${search} »` : 'Personne à surveiller'}
+						title={search ? `Aucun barbier ne s’appelle « ${search} »` : 'Aucun barbier'}
 						action={
 							<Button
 								variant="outline"
 								onClick={() => {
 									setText('');
-									setFilter('all');
 								}}
 							>
 								Voir toute l’équipe
 							</Button>
 						}
 					>
-						{search ? 'Vérifiez l’orthographe du nom.' : 'Aucun barbier ne dépasse les seuils d’annulations ou d’absences.'}
+						{search ? 'Vérifiez l’orthographe du nom.' : 'Ajoutez un barbier pour commencer.'}
 					</Empty>
 				) : (
 					<>
 						<ul className="tiles" aria-label="L’équipe">
 							{rows.map((b) => {
-								const h = health(b);
 								return (
 									<li key={b.id}>
 										<button type="button" className="tile" onClick={() => setOpen(b.id)}>
@@ -146,7 +131,6 @@ export function BarbersPage() {
 											<span className="tile-line num">
 												{b.total_bookings ? `${b.total_bookings} réservations · ${mad(b.total_revenue)}` : 'Pas encore de réservation'}
 											</span>
-											{needsAttention(b) && <span className={`tile-alert tile-alert--${h.tone}`}>{h.label}</span>}
 										</button>
 									</li>
 								);

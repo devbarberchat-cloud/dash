@@ -12,12 +12,10 @@ import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { Portrait } from '@/ui/Portrait';
 import { useToast } from '@/ui/Toast';
-import { health, needsAttention } from './health';
 
 export function BarberSheet({ barber, name, shopName, onClose }: { barber: Barber | null; name: string; shopName: string; onClose: () => void }) {
 	const [confirm, setConfirm] = useState(false);
 	const b = barber;
-	const h = b ? health(b) : null;
 	const has = Boolean(b && b.total_bookings > 0);
 	return (
 		<>
@@ -43,7 +41,6 @@ export function BarberSheet({ barber, name, shopName, onClose }: { barber: Barbe
 			>
 				{b && has && (
 					<>
-						{h && needsAttention(b) && <p className={`bsheet-note bsheet-note--${h.tone}`}>{h.why}</p>}
 						<dl className="kpis kpis--lead">
 							<div>
 								<dt>Chiffre d’affaires</dt>

@@ -132,12 +132,6 @@ export function ServicesMenuPage() {
 					);
 				})}
 			</ol>
-			<Link to="/prestations/sans-categorie" className="menu-row menu-row--loose">
-				<span className="menu-text">
-					<b>{t('menu.withoutCategory')}</b>
-					<small>{t('menu.withoutCategoryHint')}</small>
-				</span>
-			</Link>
 
 			<AddCategoryDialog open={adding} onClose={() => setAdding(false)} categories={data.categories} onMenu={new Set(data.orders.map((order) => order.category_id))} />
 			<RemoveCategoryDialog order={removing} onClose={() => setRemoving(null)} />
