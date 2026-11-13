@@ -25,5 +25,7 @@ function backend(): Plugin {
 export default defineConfig({
 	plugins: [react(), backend()],
 	resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-	server: { port: 5174 }
+	server: { port: 5174 },
+	// a Cloudflare quick tunnel to the preview, to try the build on a phone
+	preview: { allowedHosts: ['.trycloudflare.com'] }
 });

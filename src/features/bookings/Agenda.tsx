@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useBarberSchedules } from '@/api/barbers';
 import { mediaUrl } from '@/api/http';
 import { useBookingsBetween, type Booking, type LiveBookings } from '@/api/bookings';
 import { useCurrentShop } from '@/app/shop-context';
 import { t } from '@/i18n';
 import { statusLabel, toBookingStatus, type BookingStatus } from '@/lib/booking-status';
-import { capitalize, dateFull, mad, time, today } from '@/lib/format';
+import { capitalize, dateFull, time, today } from '@/lib/format';
 import { Dialog } from '@/ui/Dialog';
 import { Avatar } from '@/ui/Portrait';
 import { BookingRow, type SimpleAction } from './BookingsPage';
@@ -110,10 +111,19 @@ export function Agenda({ live, barber, term, canAct, onAction, onOffer }: Props)
 		}
 		return [...byBarber.values()].sort((a, b) => a.person.full_name.localeCompare(b.person.full_name)).map((column) => ({ ...column, stacks: stacksOf(column.bookings) }));
 	}, [bookings]);
+	const schedules = useBarberSchedules(
+		shop.id,
+		columns.map((column) => column.person.id)
+	);
 
-	// the hours the day needs, never less than 9:00 to 21:00
-	const first = Math.min(9 * 60, ...bookings.map((booking) => minutesOf(booking.start_time)));
-	const last = Math.max(21 * 60, ...bookings.map((booking) => minutesOf(booking.end_time)));
+	// the day runs from the earliest barber's start to the latest one's end;
+	// a booking outside those hours still widens it so nothing is hidden
+	const weekday = (new Date(`${day}T12:00:00`).getDay() + 6) % 7;
+	const shifts = schedules.map((week) => week?.[String(weekday)]).filter((shift): shift is NonNullable<typeof shift> => Boolean(shift));
+	const starts = [...shifts.map((shift) => minutesOf(shift.start)), ...bookings.map((booking) => minutesOf(booking.start_time))];
+	const ends = [...shifts.map((shift) => minutesOf(shift.end)), ...bookings.map((booking) => minutesOf(booking.end_time))];
+	const first = starts.length ? Math.min(...starts) : 9 * 60;
+	const last = ends.length ? Math.max(...ends) : 21 * 60;
 	const from = Math.floor(first / 60);
 	const to = Math.ceil(last / 60);
 	const hours = Array.from({ length: to - from }, (_, i) => from + i);
@@ -156,7 +166,7 @@ export function Agenda({ live, barber, term, canAct, onAction, onOffer }: Props)
 						<div className="agenda-corner" />
 						{columns.map(({ person }) => (
 							<div key={person.id} className="agenda-who">
-								<Avatar name={person.full_name} src={mediaUrl(person.profile_picture)} size={26} round />
+								<Avatar name={person.full_name} src={mediaUrl(person.profile_picture)} size={34} />
 								<span>{person.full_name.split(' ')[0]}</span>
 							</div>
 						))}
@@ -176,19 +186,20 @@ export function Agenda({ live, barber, term, canAct, onAction, onOffer }: Props)
 									const booking = stack.bookings[index]!;
 									const status = toBookingStatus(booking.status);
 									const start = minutesOf(booking.start_time);
-									const height = Math.max(40, (minutesOf(booking.end_time) - start) * PX - 3);
+									const height = Math.max(26, (minutesOf(booking.end_time) - start) * PX - 2);
 									const go = (by: number) => setShown((s) => ({ ...s, [stack.key]: (index + by + stack.bookings.length) % stack.bookings.length }));
+									const label = status ? statusLabel(status) : booking.status;
+									// a confirmed booking is the normal case: only the others say what they are
+									const word = status === 'confirmed' || status === 're-confirmed' ? null : label;
 									return (
-										<div key={stack.key} className={`agenda-item is-${status ?? 'other'}${height < 64 ? ' is-short' : ''}`} style={{ top: (start - from * 60) * PX + 1, height }}>
-											<button type="button" className="agenda-open" onClick={() => setOpen(booking)} aria-label={`${time(booking.start_time)}, ${clientName(booking)}, ${status ? statusLabel(status) : booking.status}`}>
-												<span className="agenda-time num">
+										<div key={stack.key} className={`agenda-item is-${status ?? 'other'}${height < 40 ? ' is-short' : ''}`} style={{ top: (start - from * 60) * PX + 1, height }}>
+											<button type="button" className="agenda-open" onClick={() => setOpen(booking)} aria-label={`${time(booking.start_time)}, ${clientName(booking)}, ${label}`}>
+												<span className="agenda-client">{clientName(booking)}</span>
+												<span className="agenda-line num">
 													{time(booking.start_time)}
 													<span className="agenda-end"> – {time(booking.end_time)}</span>
 												</span>
-												<b className="agenda-client">{clientName(booking)}</b>
-												<span className="agenda-meta">
-													{status ? statusLabel(status) : booking.status} · <span className="num">{mad(booking.final_price)}</span>
-												</span>
+												{word && height >= 58 && <span className="agenda-line agenda-word">{word}</span>}
 											</button>
 											{stack.bookings.length > 1 && (
 												<span className="agenda-pager">

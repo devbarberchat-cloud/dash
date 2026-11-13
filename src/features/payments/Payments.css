@@ -10,14 +10,16 @@
 	border-radius: var(--r-list);
 	color: #fff;
 }
+/* the same purple as the "Envoyer le justificatif" button */
 .pay-card--total {
-	background: var(--indigo);
+	background: var(--mauve);
 }
 .pay-card--late {
 	background: #9b1c22;
 }
+/* the same dark blue as the ledger's "En vérification" mark */
 .pay-card--current {
-	background: #0f5132;
+	background: #1e4a80;
 }
 .pay-card dt {
 	font-size: 14px;

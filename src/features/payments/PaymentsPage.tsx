@@ -132,7 +132,7 @@ export function PaymentsPage() {
 													</button>
 												</p>
 												<p className="pay-detail num">
-													{t('pay.bookingsAmount', { count: period.total_bookings, amount: mad(period.total_booking_amount) })} · {Number(period.commission_rate)} %
+													{t('pay.bookingsAmount', { count: period.total_bookings, amount: mad(period.total_booking_amount) })}
 												</p>
 											</div>
 											<div className="pay-when">

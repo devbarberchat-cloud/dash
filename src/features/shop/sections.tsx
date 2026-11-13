@@ -1,15 +1,13 @@
+import supportBanner from '@/design/support-banner.png';
 import { useState, type ReactNode } from 'react';
 import { Lock, Plus } from 'lucide-react';
 import { mediaUrl } from '@/api/http';
-import { useToggleShopStatus, type ShopDetails, type StaffMember } from '@/api/shops';
+import { type ShopDetails, type StaffMember } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
 import { hhmm, monthYearShort, toMinutes } from '@/lib/format';
 import { neighborhoodCode, neighborhoodLabel, SHOP_TYPES } from '@/lib/neighborhoods';
-import { Button } from '@/ui/Button';
-import { Dialog } from '@/ui/Dialog';
-import { Field, Input, Textarea } from '@/ui/Field';
+import { Field, Textarea } from '@/ui/Field';
 import { Portrait } from '@/ui/Portrait';
-import { useToast } from '@/ui/Toast';
 import { AddBarberDialog } from '../barbers/AddBarberDialog';
 import { RemoveBarberDialog } from '../barbers/BarberSheet';
 import { DESCRIPTION_MAX, type Draft, type useShopForm } from './useShopForm';
@@ -188,14 +186,6 @@ export function TeamSection({ id, staff, loading }: { id: string; staff?: StaffM
 /* statut */
 
 export function StatusSection({ id, shop }: { id: string; shop: ShopDetails }) {
-	const [open, setOpen] = useState(false);
-	const [typed, setTyped] = useState('');
-	const setActive = useToggleShopStatus(shop.id);
-	const toast = useToast();
-	const close = () => {
-		setOpen(false);
-		setTyped('');
-	};
 
 	if (shop.status === 'inactive') {
 		return (
@@ -206,53 +196,18 @@ export function StatusSection({ id, shop }: { id: string; shop: ShopDetails }) {
 	}
 
 	return (
-		<Section id={id} title="Désactiver le salon">
-			<p className="muted danger-text">
-				Le salon n’apparaîtra plus dans l’app et ne recevra plus de nouvelles réservations. Les réservations déjà prises peuvent être touchées. Le service client
-				BarberChat vous contacte ensuite pour finaliser.
-			</p>
-			<Button variant="outline" className="danger-btn" onClick={() => setOpen(true)}>
-				Désactiver le salon
-			</Button>
-			<Dialog
-				open={open}
-				onClose={close}
-				title={`Désactiver ${shop.name} ?`}
-				description="Il n’apparaîtra plus dans l’app et ne recevra plus de nouvelles réservations."
-				footer={
-					<>
-						<Button variant="outline" onClick={close}>
-							Garder le salon actif
-						</Button>
-						<Button
-							variant="danger"
-							disabled={typed.trim() !== shop.name}
-							loading={setActive.isPending}
-							onClick={() =>
-								setActive.mutate(undefined, {
-									onSuccess: () => {
-										close();
-										toast(`${shop.name} est désactivé`);
-									}
-								})
-							}
-						>
-							Désactiver
-						</Button>
-					</>
-				}
-			>
-				<Field
-					label={
-						<>
-							Pour confirmer, tapez <b>{shop.name}</b>
-						</>
-					}
-					error={setActive.isError ? 'La désactivation n’a pas abouti. Réessayez dans un instant.' : null}
-				>
-					{({ id }) => <Input id={id} value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />}
-				</Field>
-			</Dialog>
-		</Section>
+		<section id={id} className="ssec">
+			<a className="help-banner" href={helpLink(shop.name)} target="_blank" rel="noreferrer">
+				<img src={supportBanner} width={1072} height={380} alt="Une question ? Parlez au support sur WhatsApp" />
+			</a>
+		</section>
 	);
+}
+
+/** The help desk's WhatsApp number, international format without "+" (e.g. 212600000000). */
+const HELP_DESK_WHATSAPP = '';
+
+function helpLink(salon: string) {
+	const text = `Bonjour, j’ai un problème avec le salon ${salon} sur BarberChat.`;
+	return `https://wa.me/${HELP_DESK_WHATSAPP}?text=${encodeURIComponent(text)}`;
 }

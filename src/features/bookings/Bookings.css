@@ -219,30 +219,6 @@
 .agenda-col { position: relative; border-left: 1px solid var(--line); background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(color-mix(in srgb, var(--line) 45%, transparent) 1px, transparent 1px); background-size: 100% 96px, 100% 48px; }
 .agenda-now { position: absolute; left: 0; right: 0; height: 2px; background: #d23f45; z-index: 2; }
 .agenda-now::before { content: ''; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: #d23f45; }
-.agenda-item { position: absolute; left: 4px; right: 4px; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; z-index: 1; border: 1px solid transparent; }
-.agenda-open { all: unset; box-sizing: border-box; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 2px; padding: 6px 9px; cursor: pointer; overflow: hidden; }
-.agenda-open:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
-.agenda-time { font-size: 11.5px; opacity: .85; }
-.agenda-client { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.agenda-meta { font-size: 11.5px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.agenda-item.is-short .agenda-meta { display: none; }
-.agenda-item.is-short .agenda-open { flex-direction: row; align-items: center; gap: 6px; }
-.agenda-pager { display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 4px 3px; font-size: 11px; font-weight: 600; }
-.agenda-item.is-short .agenda-pager { position: absolute; right: 2px; bottom: 2px; padding: 0; border-radius: 8px; background: inherit; }
-.agenda-pager button { all: unset; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; cursor: pointer; }
-.agenda-pager button:focus-visible { outline: 2px solid currentColor; }
-.agenda-pager svg { width: 14px; height: 14px; }
-.agenda-item.is-in_progress { background: var(--ink); color: #fff; }
-.agenda-item.is-confirmed, .agenda-item.is-re-confirmed { background: var(--st-confirmed); color: #fff; }
-.agenda-item.is-pending, .agenda-item.is-reschedule_requested { background: color-mix(in srgb, var(--st-pending) 20%, #fff); border-color: var(--st-pending); color: var(--ink); }
-.agenda-item.is-completed { background: #fff; border-color: color-mix(in srgb, var(--st-done) 45%, #fff); border-left: 4px solid var(--st-done); color: var(--ink); }
-.agenda-item.is-cancelled { background: color-mix(in srgb, var(--st-cancelled) 10%, #fff); border-left: 4px solid var(--st-cancelled); color: var(--muted); }
-.agenda-item.is-no_show { background: color-mix(in srgb, var(--st-noshow) 10%, #fff); border-left: 4px solid var(--st-noshow); color: var(--muted); }
-.agenda-item.is-expired, .agenda-item.is-other { background: #f3f4f6; border-left: 4px solid var(--faint); color: var(--muted); }
-.agenda-item.is-cancelled .agenda-client, .agenda-item.is-expired .agenda-client { text-decoration: line-through; }
-.agenda-time { white-space: nowrap; }
-.agenda-item.is-short .agenda-end { display: none; }
-.agenda-item.is-short .agenda-client { flex: 1; min-width: 0; }
 .agenda-scroll { max-height: min(760px, 72vh); }
 @container page (max-width: 560px) {
 	.agenda { --agenda-col: 132px; }
@@ -250,5 +226,51 @@
 	.agenda-who { padding: 8px; font-size: 13px; gap: 6px; }
 	.agenda-hours span { right: 6px; font-size: 11px; }
 	.agenda-day { font-size: 15px; }
-	.agenda-open { padding: 5px 7px; }
+	.agenda-open { padding: 5px 6px 5px 7px; }
 }
+
+/* a booking on the agenda: a pale fill in its status colour, the name, then the time */
+.agenda-item {
+	position: absolute;
+	left: 3px;
+	right: 3px;
+	z-index: 1;
+	display: flex;
+	align-items: flex-start;
+	border-radius: 6px;
+	box-shadow: 0 0 0 1px #fff;
+	background: var(--ev-bg);
+	color: var(--ev-ink);
+	overflow: hidden;
+}
+.agenda-open {
+	all: unset;
+	box-sizing: border-box;
+	flex: 1;
+	min-width: 0;
+	align-self: stretch;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 6px 8px;
+	cursor: pointer;
+}
+.agenda-open:focus-visible { outline: 2px solid var(--ev-ink); outline-offset: -2px; border-radius: 6px; }
+.agenda-client { font-size: 13px; font-weight: 600; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agenda-line { font-size: 12px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8; }
+.agenda-item.is-short .agenda-open { flex-direction: row; align-items: baseline; gap: 6px; padding-block: 4px; }
+.agenda-item.is-short .agenda-client { flex: 0 1 auto; min-width: 0; }
+.agenda-item.is-short .agenda-end { display: none; }
+.agenda-item.is-short .agenda-line { flex: none; }
+
+.agenda-pager { flex: none; display: flex; align-items: center; padding: 3px 3px 0 0; font-size: 11px; line-height: 1; font-variant-numeric: tabular-nums; }
+.agenda-pager button { all: unset; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; }
+.agenda-pager button:focus-visible { outline: 2px solid var(--ev-ink); }
+.agenda-pager svg { width: 13px; height: 13px; }
+
+.agenda-item.is-confirmed, .agenda-item.is-re-confirmed { --ev-bg: #e3ecf8; --ev-ink: #1b4a85; }
+.agenda-item.is-in_progress { --ev-bg: var(--ink); --ev-ink: #fff; }
+.agenda-item.is-pending, .agenda-item.is-reschedule_requested { --ev-bg: #fbf0d2; --ev-ink: #6e4f00; }
+.agenda-item.is-completed { --ev-bg: #e2f1e8; --ev-ink: #165a3a; }
+.agenda-item.is-no_show { --ev-bg: #f9e4e5; --ev-ink: #94262c; }
+.agenda-item.is-cancelled, .agenda-item.is-expired, .agenda-item.is-other { --ev-bg: #f1f1f3; --ev-ink: #737985; }

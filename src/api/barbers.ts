@@ -1,5 +1,5 @@
 // The salon's barbers and their figures.
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { request } from './http';
 
 export interface Paginated<T> {
@@ -152,7 +152,18 @@ export const useBarberAnalytics = (shop: number, barber: number, range?: { start
 		placeholderData: keepPreviousData
 	});
 
-export const useBarberPeriodBookings = (shop: number, barber: number, period: number) =>
+/** Several barbers' weekly hours at once, read from (and shared with) their all-time analytics. */
+export const useBarberSchedules = (shop: number, barbers: number[]) =>
+	useQueries({
+		queries: barbers.map((barber) => ({
+			queryKey: ['barbers', shop, barber, 'analytics', null],
+			queryFn: async ({ signal }: { signal: AbortSignal }) => (await request<{ analytics: BarberAnalytics }>(`${base(shop)}/${barber}/analytics/`, { signal })).analytics,
+			staleTime: 5 * 60_000
+		})),
+		combine: (results) => results.map((result) => result.data?.barber_schedule?.weekly_schedule ?? null)
+	});
+
+export const useBarberPeriodBookings =(shop: number, barber: number, period: number) =>
 	useQuery({
 		queryKey: ['barbers', shop, barber, 'period', period],
 		queryFn: ({ signal }) => request<BarberPeriodBookings>(`${base(shop)}/${barber}/periods/${period}/bookings/`, { signal })

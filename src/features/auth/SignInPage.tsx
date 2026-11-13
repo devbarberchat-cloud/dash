@@ -57,7 +57,6 @@ export function SignInPage() {
 			<div className="signin-box">
 				<img src={logo} alt="BarberChat" className="signin-logo" />
 				<h1>{t('auth.login.title')}</h1>
-				<p className="signin-lead">{t('auth.login.description')}</p>
 
 				<form onSubmit={submit} noValidate>
 					{signIn.isError && (
