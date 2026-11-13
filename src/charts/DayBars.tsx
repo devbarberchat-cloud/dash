@@ -97,10 +97,6 @@ export function DayBars({ points, average, height = 264 }: { points: DayPoint[];
 					</g>
 				))}
 			</svg>
-			<p className="db-note">
-				{t('home.chartAmounts')} {withCounts && `${t('home.chartCounts')} `}
-				{average > 0 && t('home.chartAverage')}
-			</p>
 		</div>
 	);
 }

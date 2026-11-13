@@ -28,6 +28,10 @@ const TABS: Record<Tab, { list: keyof LiveBookings; label: MessageKey; empty: Me
 	upcoming: { list: 'upcoming_bookings', label: 'live.tabUpcoming', empty: 'live.emptyUpcoming' }
 };
 const TAB_ORDER = Object.keys(TABS) as Tab[];
+/** Tabs where the salon still owes an answer (shown in the top "Active" section). */
+const ACTIVE_TABS: Tab[] = ['pending', 'reschedule'];
+/** Tabs that show the booked schedule (shown in the bottom "Schedule" section). Start / finish of a service is up to the barber, so it lives in their own tools. */
+const SCHEDULE_TABS: Tab[] = ['confirmed', 'inProgress', 'today', 'upcoming'];
 
 /** What the confirmation says for each action, and the name of its button. */
 const ACTIONS: Record<Exclude<BookingAction, 'offer_reschedule_slots'>, { label: MessageKey; title: MessageKey; text: MessageKey; danger?: boolean }> = {
@@ -51,14 +55,12 @@ export type Delay = (typeof DELAYS)[number];
 export function BookingsPage() {
 	const shop = useCurrentShop();
 	const { data, isPending, isFetching, error, refetch, dataUpdatedAt } = useLiveBookings(shop.id);
-	const [tab, setTab] = useState<Tab | null>(null);
+	const [activeTab, setActiveTab] = useState<Tab>('pending');
+	const [scheduleTab, setScheduleTab] = useState<Tab>('today');
 	const [search, setSearch] = useState('');
 	const [barber, setBarber] = useState('');
 	const [acting, setActing] = useState<{ booking: Booking; action: SimpleAction } | null>(null);
 	const [offering, setOffering] = useState<Booking | null>(null);
-
-	// opens on what needs an answer, else on today
-	const current: Tab = tab ?? (data?.pending_bookings.length ? 'pending' : 'today');
 
 	const barbers = useMemo(() => {
 		const seen = new Map<number, string>();
@@ -71,9 +73,14 @@ export function BookingsPage() {
 
 	const canAct = data.booking_management_mode === 'manager';
 	const term = search.trim().toLowerCase();
-	const rows = (data[TABS[current].list] as Booking[]).filter(
-		(booking) => (!barber || String(booking.barber?.id) === barber) && (!term || `${clientName(booking)} ${booking.booking_number}`.toLowerCase().includes(term))
-	);
+	// a request whose time ran out no longer waits for an answer: it leaves the active lists
+	const listOf = (key: Tab) => (data[TABS[key].list] as Booking[]).filter((booking) => !(ACTIVE_TABS.includes(key) && booking.is_expired));
+	const filterRows = (key: Tab) =>
+		listOf(key).filter((booking) => (!barber || String(booking.barber?.id) === barber) && (!term || `${clientName(booking)} ${booking.booking_number}`.toLowerCase().includes(term)));
+	const activeRows = filterRows(activeTab);
+	const scheduleRows = filterRows(scheduleTab);
+	const waiting = listOf('pending').length;
+	const activeTotal = waiting + listOf('reschedule').length;
 	const late = data.in_progress_bookings.filter((booking) => (booking.remaining_time_seconds ?? 0) < 0).length;
 
 	return (
@@ -108,7 +115,7 @@ export function BookingsPage() {
 			<dl className="figures">
 				<div>
 					<dt>{t('live.statPending')}</dt>
-					<dd>{int(data.stats.pending_count)}</dd>
+					<dd>{int(waiting)}</dd>
 				</div>
 				<div>
 					<dt>{t('live.statInProgress')}</dt>
@@ -124,32 +131,58 @@ export function BookingsPage() {
 				</div>
 			</dl>
 
-			<section className="bookings" aria-label={t(TABS[current].label)}>
-				<ChipGroup
-					label={t('live.title')}
-					value={current}
-					onChange={setTab}
-					options={TAB_ORDER.map((key) => ({ value: key, label: t(TABS[key].label), count: (data[TABS[key].list] as Booking[]).length }))}
-				/>
-				<div className="toolbar">
-					<SearchInput value={search} onChange={setSearch} label={t('live.searchPlaceholder')} />
-					{barbers.length > 1 && (
-						<Select className="control--sm" aria-label={t('live.barber')} value={barber} onChange={(event) => setBarber(event.target.value)}>
-							<option value="">{t('live.allBarbers')}</option>
-							{barbers.map(([id, name]) => (
-								<option key={id} value={id}>
-									{name}
-								</option>
-							))}
-						</Select>
-					)}
-				</div>
+			<div className="toolbar">
+				<SearchInput value={search} onChange={setSearch} label={t('live.searchPlaceholder')} />
+				{barbers.length > 1 && (
+					<Select className="control--sm" aria-label={t('live.barber')} value={barber} onChange={(event) => setBarber(event.target.value)}>
+						<option value="">{t('live.allBarbers')}</option>
+						{barbers.map(([id, name]) => (
+							<option key={id} value={id}>
+								{name}
+							</option>
+						))}
+					</Select>
+				)}
+			</div>
 
-				{rows.length === 0 ? (
-					<p className="muted bookings-none">{t(term || barber ? 'live.noMatch' : TABS[current].empty)}</p>
+			{activeTotal > 0 && (
+				<section className="bookings" aria-labelledby="bookings-active">
+					<h2 id="bookings-active" className="bookings-heading">
+						{t('live.sectionActive')}
+					</h2>
+					<ChipGroup
+						label={t('live.sectionActive')}
+						value={activeTab}
+						onChange={setActiveTab}
+						options={ACTIVE_TABS.map((key) => ({ value: key, label: t(TABS[key].label), count: listOf(key).length }))}
+					/>
+					{activeRows.length === 0 ? (
+						<p className="muted bookings-none">{t(term || barber ? 'live.noMatch' : TABS[activeTab].empty)}</p>
+					) : (
+						<ul className="list">
+							{activeRows.map((booking) => (
+								<BookingRow key={booking.id} booking={booking} canAct={canAct} onAction={(action) => setActing({ booking, action })} onOffer={() => setOffering(booking)} />
+							))}
+						</ul>
+					)}
+				</section>
+			)}
+
+			<section className="bookings" aria-labelledby="bookings-schedule">
+				<h2 id="bookings-schedule" className="bookings-heading">
+					{t('live.sectionSchedule')}
+				</h2>
+				<ChipGroup
+					label={t('live.sectionSchedule')}
+					value={scheduleTab}
+					onChange={setScheduleTab}
+					options={SCHEDULE_TABS.map((key) => ({ value: key, label: t(TABS[key].label), count: listOf(key).length }))}
+				/>
+				{scheduleRows.length === 0 ? (
+					<p className="muted bookings-none">{t(term || barber ? 'live.noMatch' : TABS[scheduleTab].empty)}</p>
 				) : (
 					<ul className="list">
-						{rows.map((booking) => (
+						{scheduleRows.map((booking) => (
 							<BookingRow key={booking.id} booking={booking} canAct={canAct} onAction={(action) => setActing({ booking, action })} onOffer={() => setOffering(booking)} />
 						))}
 					</ul>
@@ -165,26 +198,21 @@ export function BookingsPage() {
 export function BookingRow({ booking, canAct, onAction, onOffer }: { booking: Booking; canAct: boolean; onAction: (action: SimpleAction) => void; onOffer: () => void }) {
 	const status = toBookingStatus(booking.status);
 	const confirmed = status === 'confirmed' || status === 're-confirmed';
+	// a request still waiting for its answer
+	const open = status === 'pending' && !booking.is_expired;
 	const left = booking.remaining_time_seconds;
 
-	// the one thing to do next, then the rest behind "more"
+	// the one thing to do next, then the rest behind "more".
+	// start_service and complete_service live in the barber's own tools, not here.
 	const primary: { label: MessageKey; run: () => void; disabled?: boolean } | null =
-		status === 'pending'
-			? { label: 'live.action.accept', run: () => onAction('accept') }
-			: status === 'reschedule_requested'
-				? { label: 'live.action.offerTimes', run: onOffer }
-				: confirmed
-					? { label: 'live.action.start', run: () => onAction('start_service'), disabled: !booking.can_start_service }
-					: status === 'in_progress'
-						? { label: 'live.action.complete', run: () => onAction('complete_service') }
-						: null;
+		open ? { label: 'live.action.accept', run: () => onAction('accept') } : null;
 	const more: { label: MessageKey; run: () => void }[] = [];
-	if (status === 'pending') more.push({ label: 'live.action.offerTimes', run: onOffer });
+	if (open) more.push({ label: 'live.action.offerTimes', run: onOffer });
 	if (confirmed && booking.can_be_delayed) more.push({ label: 'live.action.delay', run: () => onAction('delay_booking') });
 	if (confirmed && booking.can_report_customer_delay) more.push({ label: 'live.action.reportLate', run: () => onAction('report_customer_delay') });
 	if (confirmed && booking.can_mark_no_show) more.push({ label: 'live.action.noShow', run: () => onAction('mark_no_show') });
-	if (status === 'pending' || confirmed) more.push({ label: 'live.action.askReschedule', run: () => onAction('request_reschedule') });
-	if (status === 'pending' || confirmed || status === 'reschedule_requested') more.push({ label: 'live.action.cancel', run: () => onAction('cancel') });
+	if (open || confirmed) more.push({ label: 'live.action.askReschedule', run: () => onAction('request_reschedule') });
+	if (open || confirmed || status === 'reschedule_requested') more.push({ label: 'live.action.cancel', run: () => onAction('cancel') });
 
 	return (
 		<li className="bk">
@@ -195,7 +223,7 @@ export function BookingRow({ booking, canAct, onAction, onOffer }: { booking: Bo
 			<div className="bk-main">
 				<p className="bk-who">
 					<b>{clientName(booking)}</b>
-					<StatusBadge status={booking.status} />
+					<StatusBadge status={status === 'pending' && booking.is_expired ? 'expired' : booking.status} />
 				</p>
 				<p className="bk-what">
 					{booking.services.map((service) => service.title).join(', ')} · {duration(booking.total_duration_minutes)} · {booking.barber?.full_name ?? t('live.noBarber')}

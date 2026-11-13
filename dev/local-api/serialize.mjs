@@ -89,7 +89,7 @@ export function serializeBooking(b, state) {
 	const promo = b.promoId ? state.data.promos.find((p) => p.id === b.promoId) : null;
 	const pendingDeadline =
 		b.status === 'pending'
-			? Math.max(0, Math.round((new Date(b.created_at).getTime() + 24 * 3600000 - now) / 1000))
+			? Math.max(0, Math.round((new Date(b.created_at).getTime() + 10 * 60000 - now) / 1000))
 			: null;
 	const sinceStart =
 		b.status === 'in_progress' ? Math.max(0, Math.round((now - start) / 1000)) : null;

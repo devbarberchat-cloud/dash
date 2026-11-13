@@ -158,7 +158,11 @@
 	overflow: visible;
 }
 .db-bar {
-	fill: #111827;
+	fill: var(--mauve);
+}
+.is-today .db-bar {
+	fill: var(--mauve);
+	opacity: 0.55;
 }
 .db-average {
 	stroke: var(--faint);

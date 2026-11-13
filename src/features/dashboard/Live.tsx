@@ -1,62 +1,83 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { ArrowRight, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowRight, Check, X } from 'lucide-react';
 import { useBookingAction, useLiveBookings, type Booking, type LiveBookings } from '@/api/bookings';
 import { errorText, mediaUrl } from '@/api/http';
 import { usePresence, usePresenceHistory, type PresenceDay, type PresenceNow } from '@/api/presence';
 import { useCurrentShop } from '@/app/shop-context';
 import { ActionDialog, SlotsDialog, type Delay, type SimpleAction } from '@/features/bookings/BookingsPage';
 import { t } from '@/i18n';
-import { GRACE_MINUTES, overrun, startDelay } from '@/lib/booking-lapses';
+import { GRACE_MINUTES, startDelay } from '@/lib/booking-lapses';
 import { capitalize, daysAgo, duration, mad, time, today, weekdayDate } from '@/lib/format';
 import { Button } from '@/ui/Button';
 import { Failure, Loading } from '@/ui/controls';
 import { Dialog } from '@/ui/Dialog';
+import { MoreMenu } from '@/ui/MoreMenu';
 import { Avatar } from '@/ui/Portrait';
 import { useToast } from '@/ui/Toast';
 
-/** Why a booking is on the list of things to do. */
-type Kind = 'request' | 'reschedule' | 'late' | 'over' | 'ready' | 'expired' | 'next';
+/**
+ * Why a booking waits for the manager: a request to answer, or a client who
+ * has not shown up. Starting and finishing a service is the barber's, in the
+ * barber's own app, so neither appears here.
+ */
+type Kind = 'request' | 'late';
 interface Task {
 	booking: Booking;
 	kind: Kind;
+	/** seconds left to answer a request, counted down from the last refresh */
+	left: number | null;
 }
 
 const KIND_COLOR: Record<Kind, string> = {
 	request: 'var(--st-pending)',
-	reschedule: 'var(--st-pending)',
-	late: 'var(--st-noshow)',
-	over: 'var(--st-noshow)',
-	ready: 'var(--st-done)',
-	expired: 'var(--faint)',
-	next: 'var(--st-confirmed)'
+	late: 'var(--st-noshow)'
 };
 
+/** A request is answered within 10 minutes, or it expires. The ring shows what is left of them. */
+const REQUEST_WINDOW_SECONDS = 10 * 60;
+/** The ring and its figure turn red for the last two minutes. */
+const URGENT_SECONDS = 2 * 60;
+
+/** The time on the device, refreshed every second, so a countdown runs between two refreshes of the agenda. */
+function useNow() {
+	const [now, setNow] = useState(() => Date.now());
+	useEffect(() => {
+		const timer = setInterval(() => setNow(Date.now()), 1000);
+		return () => clearInterval(timer);
+	}, []);
+	return now;
+}
+
+/** 4:05 */
+const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+
 /**
- * Everything that waits for a hand, most pressing first: requests by the time
- * left to answer, bookings to move, services that should have started,
- * services running past their time, services that can start, and last the
- * requests that already expired.
+ * What waits for the manager, most pressing first: requests by the time left
+ * to answer, then clients who are late. A request whose time ran out leaves
+ * the list: it is expired.
  */
-function tasksOf(data: LiveBookings, now: number): Task[] {
-	const as = (kind: Kind) => (booking: Booking) => ({ booking, kind });
-	const open = data.pending_bookings.filter((booking) => !booking.is_expired).sort((a, b) => (a.time_until_expiry ?? Infinity) - (b.time_until_expiry ?? Infinity));
-	const late = data.current_bookings.filter((booking) => (startDelay(booking, now) ?? 0) > GRACE_MINUTES);
-	const over = data.in_progress_bookings.filter((booking) => (overrun(booking, now) ?? 0) > GRACE_MINUTES);
-	const ready = data.current_bookings.filter((booking) => booking.can_start_service && !late.includes(booking));
-	const expired = data.pending_bookings.filter((booking) => booking.is_expired);
-	return [...open.map(as('request')), ...data.reschedule_requested.map(as('reschedule')), ...late.map(as('late')), ...over.map(as('over')), ...ready.map(as('ready')), ...expired.map(as('expired'))];
+function tasksOf(data: LiveBookings, now: number, fetchedAt: number): Task[] {
+	const elapsed = Math.max(0, (now - fetchedAt) / 1000);
+	const requests = data.pending_bookings
+		.filter((booking) => !booking.is_expired)
+		.map((booking): Task => ({ booking, kind: 'request', left: booking.time_until_expiry == null ? null : booking.time_until_expiry - elapsed }))
+		.filter((task) => task.left === null || task.left > 0)
+		.sort((a, b) => (a.left ?? Infinity) - (b.left ?? Infinity));
+	const late = data.current_bookings.filter((booking) => (startDelay(booking, now) ?? 0) > GRACE_MINUTES).map((booking): Task => ({ booking, kind: 'late', left: null }));
+	return [...requests, ...late];
 }
 
 const clientName = (booking: Booking) => booking.client?.full_name || booking.client?.username || t('live.unknownClient');
 const dayName = (date: string) => (date === today() ? t('home.today') : date === daysAgo(-1) ? t('home.tomorrow') : capitalize(weekdayDate(date)));
 
-/** What needs the salon now, one booking at a time, and the way to all the others. */
+/** What needs the manager now: one booking in full, the others as a row of chips to pick from. */
 export function LiveRequests() {
 	const shop = useCurrentShop();
-	const { data, error, refetch } = useLiveBookings(shop.id);
+	const { data, error, refetch, dataUpdatedAt } = useLiveBookings(shop.id);
 	const accept = useBookingAction(shop.id);
 	const toast = useToast();
+	const now = useNow();
 	const [picked, setPicked] = useState<number | null>(null);
 	// answered here, and not yet gone from the agenda's next refresh
 	const [handled, setHandled] = useState<string[]>([]);
@@ -66,19 +87,10 @@ export function LiveRequests() {
 	if (error && !data) return <Failure error={error} onRetry={() => void refetch()} />;
 	if (!data) return <Loading />;
 
-	const tasks = tasksOf(data, Date.now()).filter((task) => !handled.includes(`${task.booking.id}:${task.kind}`));
-	const at = Math.max(
-		0,
-		tasks.findIndex((task) => task.booking.id === picked)
-	);
-	const upcoming = data.current_bookings.find((booking) => !tasks.some((task) => task.booking.id === booking.id));
-	const task: Task | null = tasks[at] ?? (upcoming ? { booking: upcoming, kind: 'next' } : null);
+	const tasks = tasksOf(data, now, dataUpdatedAt).filter((task) => !handled.includes(`${task.booking.id}:${task.kind}`));
+	const task: Task | null = tasks.find((item) => item.booking.id === picked) ?? tasks[0] ?? null;
 	const canAct = data.booking_management_mode === 'manager';
 
-	const step = (by: number) => {
-		accept.reset();
-		setPicked(tasks[(at + by + tasks.length) % tasks.length]?.booking.id ?? null);
-	};
 	// accepting is one press: no second question, the next booking comes up
 	const acceptNow = (booking: Booking) =>
 		accept.mutate(
@@ -92,14 +104,6 @@ export function LiveRequests() {
 			}
 		);
 
-	const counts = [
-		{ label: t('live.tabPending'), value: data.pending_bookings.length, urgent: true },
-		{ label: t('live.tabReschedule'), value: data.reschedule_requested.length, urgent: true },
-		{ label: t('live.tabConfirmed'), value: data.current_bookings.length, urgent: false },
-		{ label: t('live.tabInProgress'), value: data.in_progress_bookings.length, urgent: false },
-		{ label: t('home.today'), value: data.stats.today_count, urgent: false }
-	];
-
 	return (
 		<section className="act" aria-labelledby="dash-requests">
 			<div className="act-head">
@@ -111,25 +115,13 @@ export function LiveRequests() {
 						</span>
 					)}
 				</h2>
-				{tasks.length > 1 && (
-					<div className="act-step" role="group" aria-label={t('home.requests')}>
-						<button type="button" aria-label={t('home.previousTask')} onClick={() => step(-1)}>
-							<ChevronLeft aria-hidden="true" />
-						</button>
-						<span className="num" aria-live="polite">
-							{t('home.taskOf', { index: at + 1, count: tasks.length })}
-						</span>
-						<button type="button" aria-label={t('home.nextTask')} onClick={() => step(1)}>
-							<ChevronRight aria-hidden="true" />
-						</button>
-					</div>
-				)}
 			</div>
 
 			{task ? (
 				<TaskCard
 					key={`${task.booking.id}:${task.kind}`}
 					task={task}
+					now={now}
 					canAct={canAct}
 					accepting={accept.isPending}
 					failure={accept.isError && accept.variables?.bookingId === task.booking.id ? errorText(accept.error) : null}
@@ -141,19 +133,31 @@ export function LiveRequests() {
 				<p className="act-none">{t('home.requestsEmpty')}</p>
 			)}
 
-			<Link to="/reservations" className="act-all">
-				<dl>
-					{counts.map((count) => (
-						<div key={count.label} className={count.urgent && count.value > 0 ? 'is-alert' : undefined}>
-							<dt>{count.label}</dt>
-							<dd className="num">{count.value}</dd>
-						</div>
+			{tasks.length > 1 && (
+				<ol className="act-queue" aria-label={t('home.requests')}>
+					{tasks.map((item) => (
+						<li key={`${item.booking.id}:${item.kind}`}>
+							<button
+								type="button"
+								className={`act-mini${item === task ? ' is-current' : ''}`}
+								aria-current={item === task}
+								onClick={() => {
+									accept.reset();
+									setPicked(item.booking.id);
+								}}
+							>
+								<span className="act-mini-when num">{time(item.booking.start_time)}</span>
+								<span className="act-mini-who">{clientName(item.booking)}</span>
+								{item.left !== null && <Countdown seconds={item.left} size={18} className="act-mini-chrono" />}
+							</button>
+						</li>
 					))}
-				</dl>
-				<span className="act-all-go">
-					{t('home.openBookings')}
-					<ArrowRight aria-hidden="true" />
-				</span>
+				</ol>
+			)}
+
+			<Link to="/reservations" className="act-queue-all">
+				{t('home.openBookings')}
+				<ArrowRight aria-hidden="true" />
 			</Link>
 
 			<ActionDialog acting={acting} onClose={() => setActing(null)} />
@@ -162,8 +166,28 @@ export function LiveRequests() {
 	);
 }
 
+/** The time left to answer: a ring that empties over the ten minutes, and the minutes and seconds beside it. */
+function Countdown({ seconds, size, className, label }: { seconds: number; size: number; className: string; label?: boolean }) {
+	const left = Math.max(0, seconds);
+	const share = Math.min(1, left / REQUEST_WINDOW_SECONDS) * 100;
+	const r = size / 2 - 3;
+	const text = t('live.expiresIn', { time: clock(left) });
+	return (
+		<span className={`${className}${left <= URGENT_SECONDS ? ' is-bad' : ''}`} role="timer" aria-label={text}>
+			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+				<circle cx={size / 2} cy={size / 2} r={r} className="chrono-track" />
+				<circle cx={size / 2} cy={size / 2} r={r} className="chrono-arc" pathLength={100} strokeDasharray={`${share} 100`} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
+			</svg>
+			<span className="num" aria-hidden="true">
+				{label ? text : clock(left)}
+			</span>
+		</span>
+	);
+}
+
 interface TaskCardProps {
 	task: Task;
+	now: number;
 	canAct: boolean;
 	accepting: boolean;
 	failure: string | null;
@@ -172,56 +196,23 @@ interface TaskCardProps {
 	onOffer: () => void;
 }
 
-/**
- * One booking and what to do with it. Black while it waits for an answer, so
- * it is the first thing read on the page; white when it is only the next
- * client. The answer is one large button, its opposite beside it.
- */
-function TaskCard({ task, canAct, accepting, failure, onAccept, onAction, onOffer }: TaskCardProps) {
-	const { booking, kind } = task;
-	const now = Date.now();
-	const expiry = kind === 'request' && booking.time_until_expiry ? Math.ceil(booking.time_until_expiry / 60) : null;
-
-	const label: Record<Kind, string> = {
-		request: t('home.kind.request'),
-		reschedule: t('live.tabReschedule'),
-		late: t('home.kind.late'),
-		over: t('home.kind.over'),
-		ready: t('home.kind.ready'),
-		expired: t('live.expired'),
-		next: t('home.kind.next')
-	};
-	// the one figure that says how pressing it is
-	const pressure =
-		expiry !== null
-			? { text: t('live.expiresIn', { time: duration(expiry) }), bad: expiry <= 30 }
-			: kind === 'late'
-				? { text: t('home.lateBy', { time: duration(Math.floor(startDelay(booking, now) ?? 0)) }), bad: true }
-				: kind === 'over'
-					? { text: t('live.overBy', { time: duration(Math.floor(overrun(booking, now) ?? 0)) }), bad: true }
-					: booking.customer_delay_reported
-						? { text: t('live.clientLate'), bad: false }
-						: null;
-
-	const decline = (
-		<Button variant="outline" dot={false} icon={<X aria-hidden="true" />} onClick={() => onAction('cancel')}>
-			{t(kind === 'request' || kind === 'expired' ? 'live.action.decline' : 'live.action.cancel')}
-		</Button>
-	);
-	const offer = (
-		<button type="button" className="text-btn" onClick={onOffer}>
-			{t('live.action.offerTimes')}
-		</button>
-	);
+/** One booking and what the manager can do with it: the answer as one large button, the other way beside it. */
+function TaskCard({ task, now, canAct, accepting, failure, onAccept, onAction, onOffer }: TaskCardProps) {
+	const { booking, kind, left } = task;
+	const label = t(kind === 'request' ? 'home.kind.request' : 'home.kind.late');
 
 	return (
-		<article className={`act-card${kind === 'next' ? ' act-card--quiet' : ''}`} aria-label={`${label[kind]} : ${clientName(booking)}, ${dayName(booking.booking_date)} ${time(booking.start_time)}`}>
+		<article className="act-card" aria-label={`${label} : ${clientName(booking)}, ${dayName(booking.booking_date)} ${time(booking.start_time)}`}>
 			<div className="act-top">
 				<p className="act-kind">
 					<i style={{ background: KIND_COLOR[kind] }} aria-hidden="true" />
-					{label[kind]}
+					{label}
 				</p>
-				{pressure && <p className={`act-pill${pressure.bad ? ' is-bad' : ''}`}>{pressure.text}</p>}
+				{left !== null ? (
+					<Countdown seconds={left} size={28} className="act-chrono" label />
+				) : kind === 'late' ? (
+					<p className="act-pill is-bad">{t('home.lateBy', { time: duration(Math.floor(startDelay(booking, now) ?? 0)) })}</p>
+				) : null}
 			</div>
 
 			<div className="act-body">
@@ -251,44 +242,31 @@ function TaskCard({ task, canAct, accepting, failure, onAccept, onAction, onOffe
 
 				{canAct ? (
 					<div className="act-actions">
-						{kind === 'request' && (
+						{kind === 'request' ? (
 							<>
 								<div className="act-pair">
 									<Button variant="white" dot={false} icon={<Check aria-hidden="true" />} loading={accepting} onClick={onAccept}>
 										{t('live.action.accept')}
 									</Button>
-									{decline}
+									<Button variant="outline" dot={false} onClick={onOffer}>
+										{t('live.action.offerTimes')}
+									</Button>
 								</div>
-								{offer}
+								<div className="act-more">
+									<MoreMenu label={t('live.actions')} items={[{ label: t('live.action.decline'), run: () => onAction('cancel') }]} />
+								</div>
 							</>
-						)}
-						{(kind === 'reschedule' || kind === 'expired') && (
-							<div className="act-pair">
-								<Button variant="white" dot={false} onClick={onOffer}>
-									{t('live.action.offerTimes')}
-								</Button>
-								{decline}
-							</div>
-						)}
-						{(kind === 'late' || kind === 'ready' || kind === 'next') && (
+						) : (
 							<>
 								<div className="act-pair">
-									<Button
-										variant={kind === 'next' ? 'ink' : 'white'}
-										dot={false}
-										disabled={!booking.can_start_service}
-										title={booking.can_start_service ? undefined : t('live.action.startNotYet')}
-										onClick={() => onAction('start_service')}
-									>
-										{t('live.action.start')}
-									</Button>
-									{kind === 'late' && booking.can_mark_no_show ? (
-										<Button variant="outline" dot={false} onClick={() => onAction('mark_no_show')}>
+									{booking.can_mark_no_show && (
+										<Button variant="white" dot={false} onClick={() => onAction('mark_no_show')}>
 											{t('live.action.noShow')}
 										</Button>
-									) : (
-										decline
 									)}
+									<Button variant="outline" dot={false} icon={<X aria-hidden="true" />} onClick={() => onAction('cancel')}>
+										{t('live.action.cancel')}
+									</Button>
 								</div>
 								{booking.can_be_delayed && (
 									<div className="act-delay" role="group" aria-label={t('live.action.delay')}>
@@ -301,13 +279,6 @@ function TaskCard({ task, canAct, accepting, failure, onAccept, onAction, onOffe
 									</div>
 								)}
 							</>
-						)}
-						{kind === 'over' && (
-							<div className="act-pair act-pair--one">
-								<Button variant="white" dot={false} icon={<Check aria-hidden="true" />} onClick={() => onAction('complete_service')}>
-									{t('live.action.complete')}
-								</Button>
-							</div>
 						)}
 						{failure && (
 							<p className="notice notice--bad" role="alert">

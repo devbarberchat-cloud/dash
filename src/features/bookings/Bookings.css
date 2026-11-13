@@ -3,6 +3,17 @@
 	flex-direction: column;
 	gap: 16px;
 }
+.bookings + .bookings {
+	margin-top: 28px;
+	padding-top: 28px;
+	border-top: 1px solid var(--line);
+}
+.bookings-heading {
+	font-family: var(--font-heading);
+	font-size: 18px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
 .bookings-none {
 	padding-block: 24px;
 }

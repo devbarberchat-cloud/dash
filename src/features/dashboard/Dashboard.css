@@ -155,7 +155,6 @@
 	letter-spacing: 0;
 	line-height: 1;
 }
-.act-step,
 .rev-nav {
 	display: inline-flex;
 	align-items: center;
@@ -163,7 +162,6 @@
 	font-size: 13.5px;
 	color: var(--muted);
 }
-.act-step button,
 .rev-nav button {
 	display: grid;
 	place-items: center;
@@ -173,48 +171,31 @@
 	border-radius: 50%;
 	color: var(--ink);
 }
-.act-step button:disabled,
 .rev-nav button:disabled {
 	opacity: 0.35;
 	cursor: default;
 }
-.act-step svg,
 .rev-nav svg {
 	width: 16px;
 	height: 16px;
 }
-[dir='rtl'] .act-step svg,
 [dir='rtl'] .rev-nav svg {
 	scale: -1 1;
 }
-.act-step span {
-	min-width: 62px;
-	text-align: center;
-}
 
-/* black while it waits for an answer, so it is read first; white when it is
-   only the next client */
+/* dark, so what waits for an answer is the first thing read on the page */
 .act-card {
-	--soft: rgba(255, 255, 255, 0.74);
-	--dim: rgba(255, 255, 255, 0.6);
-	--rule: rgba(255, 255, 255, 0.14);
-	--edge: rgba(255, 255, 255, 0.34);
+	--soft: rgba(255, 255, 255, 0.72);
+	--dim: rgba(255, 255, 255, 0.56);
+	--rule: rgba(255, 255, 255, 0.12);
+	--edge: rgba(255, 255, 255, 0.32);
 	display: flex;
 	flex-direction: column;
 	gap: 22px;
 	padding: clamp(20px, 3cqi, 30px);
 	border-radius: var(--r-list);
-	background: #0a0a0a;
+	background: var(--plum);
 	color: #fff;
-}
-.act-card--quiet {
-	--soft: var(--muted);
-	--dim: var(--muted);
-	--rule: var(--line-soft);
-	--edge: rgba(0, 0, 0, 0.22);
-	border: 1px solid var(--line);
-	background: var(--canvas);
-	color: var(--ink);
 }
 .act-top {
 	display: flex;
@@ -329,6 +310,19 @@
 	grid-template-columns: minmax(0, 1fr);
 	gap: 10px;
 }
+.act-more {
+	display: flex;
+	justify-content: center;
+}
+.act-card .act-more .icon-btn {
+	color: #fff;
+}
+.act-card .act-more .icon-btn:hover {
+	background: rgb(255 255 255 / 0.08);
+}
+.act-more .menu {
+	color: var(--ink);
+}
 .act-pair .btn {
 	width: 100%;
 	height: 56px;
@@ -336,13 +330,13 @@
 	font-size: 16px;
 	font-weight: 600;
 }
-.act-card:not(.act-card--quiet) .btn--outline,
-.act-card:not(.act-card--quiet) .btn--outline:hover:not(:disabled) {
+.act-card .btn--outline,
+.act-card .btn--outline:hover:not(:disabled) {
 	background: transparent;
 	color: #fff;
 	box-shadow: inset 0 0 0 1px var(--edge);
 }
-.act-card:not(.act-card--quiet) .btn--white:hover:not(:disabled) {
+.act-card .btn--white:hover:not(:disabled) {
 	background: #fff;
 }
 .act-actions > .text-btn {
@@ -368,9 +362,6 @@
 	font-size: 14px;
 	font-weight: 600;
 }
-.act-card--quiet .act-delay button {
-	color: var(--ink);
-}
 .act-readonly {
 	font-size: 13.5px;
 	line-height: 1.5;
@@ -390,57 +381,120 @@
 	.act-pair {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
-	.act-pair--one {
-		grid-template-columns: minmax(0, 1fr);
-	}
 }
 
-/* the way to every booking, with how many wait in each state */
-.act-all {
+/* the queue: a scrollable row of mini chips, one per booking waiting on the manager */
+.act-queue {
 	display: flex;
-	flex-wrap: wrap;
+	gap: 8px;
+	padding-block: 2px 6px;
+	overflow-x: auto;
+	scroll-snap-type: x proximity;
+	scrollbar-width: thin;
+}
+.act-queue > li {
+	flex: none;
+	scroll-snap-align: start;
+}
+.act-mini {
+	display: inline-flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px 24px;
-	padding: 14px 20px;
+	gap: 10px;
+	padding: 8px 14px;
 	border: 1px solid var(--line);
-	border-radius: var(--r-list);
+	border-radius: var(--r-pill);
+	background: var(--canvas);
+	font-family: var(--font-body);
+	font-size: 14px;
+	white-space: nowrap;
+	text-align: start;
+	transition:
+		border-color 0.2s var(--ease),
+		background 0.2s var(--ease);
 }
-.act-all dl {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px 26px;
+.act-mini:hover {
+	border-color: var(--ink);
 }
-/* the name comes first in the markup, the number first on screen */
-.act-all dl > div {
-	display: flex;
-	flex-direction: row-reverse;
-	align-items: baseline;
-	gap: 6px;
+.act-mini.is-current {
+	border-color: var(--ink);
+	background: var(--surface);
 }
-.act-all dd {
+.act-mini-when {
 	font-family: var(--font-heading);
-	font-weight: 700;
-	font-size: 18px;
+	font-weight: 600;
+	font-size: 14.5px;
+	letter-spacing: -0.01em;
 }
-.act-all dt {
-	font-size: 13.5px;
+.act-mini-who {
+	font-weight: 500;
+}
+
+/* the time left to answer: a ring that empties, and the figure beside it */
+.chrono-track,
+.chrono-arc {
+	fill: none;
+	stroke-width: 3;
+}
+.chrono-track {
+	stroke: currentColor;
+	opacity: 0.16;
+}
+.chrono-arc {
+	stroke: var(--st-pending);
+	stroke-linecap: round;
+	transition: stroke-dasharray 1s linear;
+}
+.is-bad > svg .chrono-arc {
+	stroke: var(--st-noshow);
+}
+.act-chrono,
+.act-mini-chrono {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.act-chrono svg,
+.act-mini-chrono svg {
+	display: block;
+	flex: none;
+}
+.act-chrono {
+	padding: 3px 12px 3px 3px;
+	border-radius: var(--r-pill);
+	background: rgba(255, 255, 255, 0.08);
+	font-size: 13px;
+}
+.act-mini-chrono {
+	gap: 6px;
+	font-size: 12.5px;
 	color: var(--muted);
 }
-.act-all-go {
+.act-mini-chrono.is-bad {
+	color: var(--bad);
+}
+@media (prefers-reduced-motion: reduce) {
+	.chrono-arc {
+		transition: none;
+	}
+}
+.act-queue-all {
+	align-self: flex-start;
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
+	padding: 6px 2px;
 	font-family: var(--font-heading);
 	font-weight: 600;
-	font-size: 14px;
-	white-space: nowrap;
+	font-size: 13.5px;
+	color: var(--muted);
 }
-.act-all-go svg {
-	width: 16px;
-	height: 16px;
+.act-queue-all svg {
+	width: 14px;
+	height: 14px;
 }
-[dir='rtl'] .act-all-go svg {
+[dir='rtl'] .act-queue-all svg {
 	scale: -1 1;
 }
 
@@ -483,202 +537,136 @@
 	letter-spacing: -0.01em;
 }
 
-/* revenue, a week at a time */
-.rev-facts {
+/* barber leaderboard: rank, who, revenue bar, total */
+.board {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 4px 22px;
-	margin-bottom: 20px;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 16px;
+}
+.board-row {
+	display: grid;
+	grid-template-columns: 24px minmax(160px, 1fr) minmax(0, 2fr) auto;
+	align-items: center;
+	gap: 14px;
+	padding: 10px 14px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+}
+.board-row--total {
+	border-color: transparent;
+	background: var(--surface);
+}
+.board-rank {
+	font-family: var(--font-heading);
 	font-size: 14px;
+	font-weight: 700;
+	color: var(--muted);
+	text-align: center;
+}
+.board-row:first-child .board-rank {
+	color: var(--mauve);
+}
+.board-who {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+	color: inherit;
+}
+.board-who b {
+	display: block;
+	font-family: var(--font-heading);
+	font-size: 14.5px;
+	font-weight: 600;
+	line-height: 1.2;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.board-who small {
+	display: block;
+	font-size: 12.5px;
 	color: var(--muted);
 }
-.rev-facts b {
-	font-family: var(--font-heading);
-	font-weight: 700;
-	color: var(--ink);
+.board-bar {
+	display: block;
+	height: 6px;
+	border-radius: 999px;
+	background: var(--surface);
+	overflow: hidden;
 }
-.rev-facts span:first-child b {
-	font-size: 24px;
+.board-bar > span {
+	display: block;
+	height: 100%;
+	background: var(--mauve);
+	border-radius: inherit;
+	transition: width 0.4s var(--ease);
+}
+.board-row--total .board-bar {
+	background: transparent;
+}
+.board-amount {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 2px;
+	font-family: var(--font-heading);
+}
+.board-amount b {
+	font-size: 14.5px;
+	font-weight: 700;
+}
+.board-amount small {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--muted);
+}
+@container page (max-width: 640px) {
+	.board-row {
+		grid-template-columns: 20px minmax(0, 1fr) auto;
+		gap: 10px;
+	}
+	.board-bar {
+		grid-column: 1 / -1;
+	}
+}
+
+/* revenue, a week at a time */
+.rev-total {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	margin-bottom: 4px;
+	font-family: var(--font-heading);
+	line-height: 1.05;
+}
+.rev-total b {
+	font-weight: 700;
+	font-size: clamp(32px, 4vw, 44px);
 	letter-spacing: -0.02em;
 }
-.rev-facts b.up {
+.rev-trend {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--muted);
+}
+.rev-trend.up {
 	color: var(--good);
 }
-.rev-facts b.down {
+.rev-trend.down {
 	color: var(--bad);
+}
+.rev-sub {
+	margin-bottom: 20px;
+	font-size: 13.5px;
+	color: var(--muted);
 }
 .rev-note {
 	margin-top: 12px;
 	font-size: 13px;
 	line-height: 1.5;
 	color: var(--muted);
-}
-
-/* per barber: expired requests, late starts, services that ran over */
-.lapses {
-	width: 100%;
-	border-collapse: collapse;
-}
-.lapses thead th {
-	padding: 0 12px 10px;
-	font-weight: 500;
-	font-size: 13px;
-	text-align: start;
-	vertical-align: bottom;
-	color: var(--muted);
-}
-.lapses thead th:first-child {
-	padding-inline-start: 0;
-}
-.lapses thead i,
-.lapses-key dt i {
-	display: inline-block;
-	width: 8px;
-	height: 8px;
-	margin-inline-end: 7px;
-	border-radius: 50%;
-}
-.lapses tbody tr {
-	border-top: 1px solid var(--line-soft);
-}
-.lapses tfoot tr {
-	border-top: 1px solid var(--line);
-}
-.lapses tbody th,
-.lapses tfoot th {
-	padding: 14px 12px 14px 0;
-	font-weight: inherit;
-	text-align: start;
-}
-.lapses td {
-	width: 21%;
-	padding: 14px 12px;
-	vertical-align: top;
-}
-.lapses td b {
-	display: block;
-	font-family: var(--font-heading);
-	font-weight: 700;
-	font-size: 18px;
-	line-height: 1.2;
-}
-.lapses td b.is-none {
-	font-weight: 500;
-	color: var(--muted);
-}
-.lapses-bar {
-	display: block;
-	max-width: 160px;
-	height: 4px;
-	margin-top: 8px;
-	border-radius: 2px;
-	background: var(--surface-2);
-	overflow: hidden;
-}
-.lapses-bar > span {
-	display: block;
-	height: 100%;
-	border-radius: inherit;
-}
-.lapses td small {
-	display: block;
-	min-height: 1.5em;
-	margin-top: 6px;
-	font-size: 12.5px;
-	color: var(--muted);
-}
-.lapses-who {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	min-width: 0;
-}
-.lapses-who > span {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
-}
-.lapses-who b {
-	font-family: var(--font-heading);
-	font-weight: 600;
-	font-size: 14.5px;
-	line-height: 1.3;
-}
-.lapses-who small {
-	font-size: 13px;
-	color: var(--muted);
-}
-/* the salon's line starts under the names, past the photos */
-.lapses tfoot .lapses-who {
-	padding-inline-start: 48px;
-}
-.lapses-key {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 12px 24px;
-	margin-top: 4px;
-	padding-top: 16px;
-	border-top: 1px solid var(--line-soft);
-	font-size: 13px;
-	line-height: 1.5;
-}
-.lapses-key dt {
-	font-family: var(--font-heading);
-	font-weight: 600;
-}
-.lapses-key dd {
-	color: var(--muted);
-}
-.lapses-note {
-	margin-top: 12px;
-	font-size: 13px;
-	color: var(--muted);
-}
-@container page (max-width: 640px) {
-	/* each barber becomes a block: the name, then the three counts side by side */
-	.lapses,
-	.lapses tbody,
-	.lapses tfoot {
-		display: block;
-	}
-	.lapses thead {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-	}
-	.lapses tr {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 12px 10px;
-		padding-block: 16px;
-	}
-	.lapses tbody th,
-	.lapses tfoot th {
-		grid-column: 1 / -1;
-		padding: 0;
-	}
-	.lapses td {
-		width: auto;
-		padding: 0;
-	}
-	.lapses td::before {
-		content: attr(data-label);
-		display: block;
-		min-height: 2.6em;
-		margin-bottom: 4px;
-		font-size: 12px;
-		line-height: 1.3;
-		color: var(--muted);
-	}
-	.lapses tfoot .lapses-who {
-		padding-inline-start: 0;
-	}
-	.lapses-key {
-		grid-template-columns: minmax(0, 1fr);
-	}
 }
 
 /* one barber's week, a line per day */

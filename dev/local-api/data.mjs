@@ -506,7 +506,10 @@ export function buildDataset(now = new Date()) {
 							: Math.min(original, promo.discount_value)
 						: 0;
 					const client = pick(clientPool);
-					const createdAt = new Date(start.getTime() - (1 + Math.round(r() * 120)) * 3600000);
+					const createdAt =
+						status === 'pending'
+							? new Date(Date.now() - Math.round(r() * 9.5 * 60000))
+							: new Date(start.getTime() - (1 + Math.round(r() * 120)) * 3600000);
 					const b = {
 						id: id(),
 						shopId: shop.id,
