@@ -1,0 +1,67 @@
+.period {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 12px;
+}
+.period-range {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 10px;
+}
+.period-range .field {
+	width: 160px;
+}
+.period-range .control {
+	height: 42px;
+}
+/* level with the fields, under their labels */
+.period-range .btn {
+	margin-top: 29px;
+}
+@media (max-width: 700px) {
+	.period {
+		align-items: flex-start;
+	}
+	.period-range .field {
+		flex: 1 1 140px;
+	}
+}
+
+/* the small one: it sits beside the figures it filters, not at the head of the page */
+.period--sm {
+	gap: 10px;
+}
+.period--sm .chips {
+	gap: 4px;
+}
+.period--sm .chip {
+	height: 28px;
+	padding: 0 11px;
+	font-size: 12.5px;
+}
+.period--sm .period-range {
+	gap: 8px;
+}
+.period--sm .period-range .field {
+	width: 140px;
+}
+.period--sm .period-range .control {
+	height: 36px;
+	font-size: 13.5px;
+}
+.period--sm .period-range .btn {
+	height: 36px;
+	margin-top: 27px;
+}
+@media (pointer: coarse) {
+	.period--sm .chip {
+		height: 34px;
+	}
+}
+@container page (max-width: 360px) {
+	.period--sm .chip {
+		padding: 0 9px;
+	}
+}

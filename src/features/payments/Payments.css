@@ -1,0 +1,88 @@
+.pay {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+/* one card per week */
+.pay-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+	gap: 16px;
+}
+.pay-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 18px 20px 16px;
+	border: 1px solid var(--line);
+	border-radius: var(--r-list);
+	background: var(--canvas);
+}
+.pay-card--overdue {
+	border-color: color-mix(in srgb, var(--bad) 35%, var(--line));
+}
+.pay-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	font-family: var(--font-heading);
+}
+.pay-top b {
+	font-weight: 600;
+	font-size: 15px;
+}
+.pay-state {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: var(--surface);
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-weight: 600;
+}
+.pay-state i {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+}
+.pay-amount {
+	margin: 10px 0 0;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 26px;
+	letter-spacing: -0.02em;
+	white-space: nowrap;
+}
+.pay-when {
+	margin: 0;
+	font-size: 13.5px;
+	font-weight: 500;
+}
+.pay-when.is-late {
+	color: var(--bad);
+}
+.pay-detail {
+	margin: 0;
+	font-size: 13px;
+	color: var(--muted);
+}
+.pay-actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: auto;
+	padding-top: 14px;
+	border-top: 1px solid var(--line-soft);
+}
+.pay-card > .pay-detail {
+	margin-bottom: 12px;
+}
+.pay-file {
+	font-size: 14px;
+}

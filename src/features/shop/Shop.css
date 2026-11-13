@@ -1,0 +1,328 @@
+.shop-wait {
+	min-height: 60vh;
+}
+
+/* the cover: still, the site's corners, the logo on it */
+.cover {
+	position: relative;
+	aspect-ratio: 1600 / 640;
+	max-height: 520px;
+	margin-top: calc(-1 * clamp(12px, 2vw, 28px));
+	border-radius: var(--r-photo);
+	background: var(--surface-2);
+	overflow: hidden;
+}
+.cover > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.cover-empty {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: var(--muted);
+}
+.cover-logo {
+	position: absolute;
+	top: 16px;
+	left: 16px;
+	display: grid;
+	place-items: center;
+	width: 64px;
+	height: 90px;
+	border: 2px solid #fff;
+	border-radius: 11px;
+	background: #101010;
+	color: #fff;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	overflow: hidden;
+	box-shadow: 0 3px 12px rgba(0, 0, 0, 0.13);
+	transition: scale 0.4s var(--ease-spring);
+}
+.cover-logo img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+.cover-logo:active {
+	scale: 0.95;
+}
+/* the site's "Voir toutes les photos": a white pill on the photo */
+.cover-change {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 16px;
+	border-radius: var(--r-pill);
+	background: #fff;
+	font-size: 14px;
+	font-weight: 500;
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.06),
+		0 8px 22px -10px rgba(0, 0, 0, 0.45);
+	transition:
+		transform 0.25s var(--ease),
+		box-shadow 0.25s var(--ease);
+}
+.cover-change:hover {
+	transform: translateY(-1px);
+}
+.cover-change svg {
+	width: 16px;
+	height: 16px;
+}
+@media (max-width: 640px) {
+	.cover {
+		aspect-ratio: 1600 / 1065;
+	}
+	.cover-logo {
+		width: 52px;
+		height: 72px;
+	}
+}
+.shop-facts {
+	margin-top: calc(-1 * clamp(20px, 3vw, 36px));
+	padding-bottom: 24px;
+	border-bottom: 1px solid #eeedf0;
+}
+
+/* one column, no wider than reads well (the salon page) */
+.shop-body {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(48px, 6vw, 72px);
+	max-width: 780px;
+}
+.ssec {
+	scroll-margin-top: calc(var(--nav-h) + 24px);
+}
+
+.sgrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 20px 20px;
+}
+.span-2 {
+	grid-column: span 2;
+}
+@media (max-width: 640px) {
+	.sgrid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.span-2 {
+		grid-column: auto;
+	}
+}
+
+/* hours */
+.hours > li {
+	display: grid;
+	grid-template-columns: 150px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 8px 18px;
+	padding: 12px 22px;
+}
+.hours-day {
+	display: flex;
+	flex-direction: column;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	line-height: 1.3;
+	cursor: pointer;
+}
+.hours-day small {
+	font-family: var(--font-body);
+	font-weight: 400;
+	font-size: 13px;
+	color: var(--indigo);
+}
+.hours > li.is-closed .hours-day {
+	color: var(--muted);
+}
+.hours-times {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--muted);
+	font-size: 14px;
+}
+.hours-times .control {
+	width: 108px;
+	height: 42px;
+	padding-right: 32px;
+	background-position: right 10px center;
+}
+.hours-err {
+	grid-column: 1 / -1;
+}
+@media (max-width: 560px) {
+	.hours > li {
+		grid-template-columns: minmax(0, 1fr) auto;
+		padding: 12px 16px;
+	}
+	.hours-times {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+	.hours-times .control {
+		flex: 1;
+		width: auto;
+		min-width: 0;
+	}
+}
+
+/* team */
+.crew-remove {
+	margin-top: 4px;
+	font-size: 13px;
+	color: var(--muted);
+	text-decoration: underline;
+	text-decoration-color: rgba(0, 0, 0, 0.2);
+	text-underline-offset: 3px;
+}
+.crew-remove:hover {
+	color: var(--bad);
+	text-decoration-color: currentColor;
+}
+.crew-add {
+	display: grid;
+	place-items: center;
+	width: 88px;
+	aspect-ratio: var(--barber-ratio);
+	border-radius: var(--barber-r);
+	border: 1.5px dashed #d1d5db;
+	color: var(--muted);
+	transition:
+		border-color 0.2s var(--ease),
+		color 0.2s var(--ease);
+}
+.crew-add:hover {
+	border-color: var(--ink);
+	color: var(--ink);
+}
+.crew-add svg {
+	width: 22px;
+	height: 22px;
+}
+
+/* booking mode: two rows, one chosen */
+.mode {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	padding: 18px 22px;
+	font-family: var(--font-heading);
+	cursor: pointer;
+	transition: background 0.2s var(--ease);
+}
+.mode:hover {
+	background: #fafafc;
+}
+.mode + .mode::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 22px;
+	right: 22px;
+	border-top: 1px solid var(--line-soft);
+}
+.mode input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.mode-radio {
+	flex: none;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 2px solid #d1d5db;
+	transition: border 0.3s var(--ease-spring);
+}
+.mode:has(input:checked) .mode-radio {
+	border: 7px solid #0a0a0a;
+}
+.mode:has(input:focus-visible) {
+	outline: 2px solid var(--indigo);
+	outline-offset: -2px;
+}
+
+/* deactivate */
+.danger-text {
+	max-width: 62ch;
+	margin-bottom: 18px;
+}
+.danger-btn {
+	color: var(--bad);
+	box-shadow: inset 0 0 0 1px rgba(179, 38, 44, 0.4);
+}
+.danger-btn:hover:not(:disabled) {
+	background: var(--bad);
+	color: #fff;
+}
+
+/* save: the site's black pill */
+.savebar {
+	position: fixed;
+	z-index: 60;
+	left: 50%;
+	bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+	translate: -50% 0;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	width: max-content;
+	max-width: calc(100vw - 24px);
+	padding: 6px 6px 6px 22px;
+	border-radius: var(--r-pill);
+	background: #0a0a0a;
+	color: #fff;
+	box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.6);
+	animation: bar-in 0.4s var(--ease-out) both;
+}
+@media (max-width: 900px) {
+	.savebar {
+		bottom: calc(var(--dock-h) + 26px + env(safe-area-inset-bottom, 0px));
+	}
+}
+.savebar-text {
+	margin-right: 10px;
+	font-family: var(--font-heading);
+	font-weight: 500;
+	font-size: 14px;
+}
+.savebar-cancel {
+	height: 40px;
+	padding: 0 14px;
+	border-radius: var(--r-pill);
+	color: rgba(255, 255, 255, 0.75);
+	font-family: var(--font-heading);
+	font-size: 14px;
+}
+.savebar-cancel:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.12);
+}
+@media (max-width: 520px) {
+	.savebar {
+		width: calc(100vw - 24px);
+	}
+	.savebar-text {
+		flex: 1;
+		min-width: 0;
+	}
+}
+@keyframes bar-in {
+	from {
+		opacity: 0;
+		translate: -50% 12px;
+	}
+}

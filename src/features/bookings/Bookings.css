@@ -1,0 +1,148 @@
+.bookings {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.bookings-none {
+	padding-block: 24px;
+}
+
+/* one booking: when, who and what, the price, what to do */
+.bk {
+	display: grid;
+	grid-template-columns: 92px minmax(0, 1fr) auto auto;
+	align-items: start;
+	gap: 6px 20px;
+	padding: 18px 22px;
+}
+.bk-when {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.3;
+}
+.bk-when b {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 17px;
+	letter-spacing: -0.01em;
+}
+.bk-when span {
+	font-size: 13px;
+	color: var(--muted);
+}
+.bk-main {
+	min-width: 0;
+}
+.bk-who {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 12px;
+}
+.bk-who b {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 15.5px;
+}
+.bk-what,
+.bk-flags,
+.bk-note {
+	margin-top: 3px;
+	font-size: 13.5px;
+	color: var(--muted);
+}
+.bk-flags {
+	color: var(--warn);
+	font-weight: 500;
+}
+.bk-flags.is-late {
+	color: var(--bad);
+}
+.bk-price {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 16px;
+	white-space: nowrap;
+}
+.bk-actions {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.bk-picked {
+	margin-inline-end: auto;
+	align-self: center;
+	font-size: 14px;
+}
+
+.slots {
+	display: flex;
+	flex-direction: column;
+}
+.slot {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 48px;
+	border-bottom: 1px solid var(--line-soft);
+	cursor: pointer;
+}
+.slots li:last-child .slot {
+	border-bottom: 0;
+}
+.slot input {
+	width: 18px;
+	height: 18px;
+	accent-color: var(--ink);
+}
+
+/* history: the filters fold under the search on narrow pages */
+.history-more {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+}
+.history-more .field {
+	flex: 0 1 170px;
+}
+.history-more .control {
+	height: 42px;
+	font-size: 14px;
+}
+
+/* the list of bookings sizes its rows to its own width, wherever it sits */
+.list:has(> .bk) {
+	container: bookings / inline-size;
+}
+@container bookings (max-width: 640px) {
+	.bk {
+		grid-template-columns: minmax(0, 1fr) auto;
+		padding-inline: 16px;
+	}
+	.bk-when {
+		flex-direction: row;
+		align-items: baseline;
+		gap: 8px;
+		grid-column: 1;
+	}
+	.bk-price {
+		grid-column: 2;
+		grid-row: 1;
+	}
+	.bk-main,
+	.bk-actions {
+		grid-column: 1 / -1;
+	}
+	.bk-actions {
+		margin-top: 6px;
+	}
+	.bk .more .menu {
+		inset-inline: 0 auto;
+	}
+}
+@container page (max-width: 640px) {
+	.history-more .field {
+		flex: 1 1 140px;
+	}
+}

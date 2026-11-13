@@ -1,0 +1,48 @@
+.clients {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.clients-picked {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 16px;
+	margin-inline-start: auto;
+	font-size: 14px;
+}
+.clients-check {
+	width: 34px;
+}
+.clients-check input {
+	width: 18px;
+	height: 18px;
+	accent-color: var(--ink);
+	vertical-align: middle;
+}
+.clients-who {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+@container page (max-width: 720px) {
+	.clients-picked {
+		margin-inline-start: 0;
+	}
+	/* the checkbox sits beside the stacked row, not in it */
+	.clients .dtable tr:has(.clients-check) {
+		position: relative;
+		padding-inline-start: 36px;
+	}
+	.clients .dtable td.clients-check {
+		position: absolute;
+		inset-inline-start: 0;
+		top: 24px;
+		width: auto;
+	}
+	.clients .dtable td.clients-check::before {
+		content: none;
+	}
+}

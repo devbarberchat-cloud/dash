@@ -1,0 +1,162 @@
+/* chips (site) */
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	height: 38px;
+	padding: 0 16px;
+	border-radius: var(--r-pill);
+	border: 1px solid var(--pill-line);
+	background: var(--canvas);
+	font-family: var(--font-heading);
+	font-weight: 500;
+	font-size: 14px;
+	white-space: nowrap;
+	transition:
+		background 0.2s var(--ease),
+		color 0.2s var(--ease),
+		border-color 0.2s var(--ease),
+		scale 0.4s var(--ease-spring);
+}
+.chip:hover {
+	border-color: var(--ink);
+}
+.chip.is-on {
+	background: #0d0d0d;
+	border-color: #0d0d0d;
+	color: #fff;
+}
+.chip b {
+	display: inline-grid;
+	place-items: center;
+	min-width: 22px;
+	height: 22px;
+	margin-right: -8px;
+	padding: 0 6px;
+	border-radius: var(--r-pill);
+	background: #f2f2f4;
+	font-size: 12px;
+	font-weight: 600;
+}
+.chip.is-on b {
+	background: rgba(255, 255, 255, 0.18);
+}
+.chip:active {
+	scale: 0.96;
+	transition-duration: 0.12s;
+}
+
+/* switch */
+.switch {
+	position: relative;
+	flex: none;
+	width: 44px;
+	height: 26px;
+	border-radius: var(--r-pill);
+	background: #d1d5db;
+	transition: background 0.25s var(--ease);
+}
+.switch::after {
+	content: '';
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	transition: translate 0.4s var(--ease-spring);
+}
+.switch[aria-checked='true'] {
+	background: #0a0a0a;
+}
+.switch[aria-checked='true']::after {
+	translate: 18px 0;
+}
+.switch:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+/* state (sparingly) */
+/* words in ink, a small colored dot: color says the state, words say it too */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 13.5px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+.badge > i {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--faint);
+}
+.badge--good > i {
+	background: var(--st-done);
+}
+.badge--warn > i {
+	background: var(--st-pending);
+}
+.badge--bad > i {
+	background: var(--st-noshow);
+}
+.badge--bad {
+	color: var(--bad);
+}
+.badge--warn {
+	color: var(--warn);
+}
+.badge svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* empty */
+.empty {
+	display: grid;
+	justify-items: center;
+	gap: 8px;
+	padding: 56px 24px;
+	text-align: center;
+}
+.empty p:not(.empty-title) {
+	max-width: 42ch;
+	color: var(--muted);
+}
+.empty-icon {
+	display: grid;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	margin-bottom: 6px;
+	border-radius: 50%;
+	background: var(--surface-2);
+}
+.empty-icon svg {
+	width: 22px;
+	height: 22px;
+}
+.empty-title {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 17px;
+	letter-spacing: -0.01em;
+}
+.empty .btn {
+	margin-top: 10px;
+}
+
+@media (pointer: coarse) {
+	.chip {
+		height: 44px;
+	}
+}

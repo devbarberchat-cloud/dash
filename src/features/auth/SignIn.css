@@ -1,0 +1,66 @@
+.signin {
+	display: grid;
+	place-items: center;
+	min-height: 100dvh;
+	padding: 32px 20px;
+}
+.signin-box {
+	width: min(400px, 100%);
+}
+.signin-logo {
+	width: 96px;
+	height: 43px;
+	margin-bottom: 40px;
+}
+.signin h1 {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: clamp(26px, 6vw, 32px);
+	line-height: 1.15;
+	letter-spacing: -0.03em;
+}
+.signin-lead {
+	margin-top: 10px;
+	color: var(--muted);
+}
+.signin form {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	margin-top: 32px;
+}
+.signin form .btn {
+	margin-top: 6px;
+}
+.signin-password {
+	position: relative;
+	display: block;
+}
+.signin-password .control {
+	padding-inline-end: 52px;
+}
+.signin-password button {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-end: 0;
+	display: grid;
+	place-items: center;
+	width: 52px;
+	color: var(--muted);
+	border-radius: var(--r-field);
+}
+.signin-password svg {
+	width: 19px;
+	height: 19px;
+}
+.signin-foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 28px;
+	padding-top: 20px;
+	border-top: 1px solid var(--line);
+	font-size: 14px;
+}

@@ -1,0 +1,51 @@
+.phead {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 18px 40px;
+}
+.phead-text {
+	min-width: 0;
+}
+.phead-kicker {
+	font-size: 14px;
+	color: var(--muted);
+}
+.phead-title {
+	margin-top: 10px;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: clamp(32px, 4vw, 52px);
+	line-height: 1.1;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
+}
+.phead-kicker + .phead-title {
+	margin-top: 10px;
+}
+.phead-text > .phead-title:first-child {
+	margin-top: 0;
+}
+.phead-place {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	margin-top: 10px;
+	font-size: 15px;
+	line-height: 1.4;
+	color: var(--muted);
+}
+.phead-place svg {
+	flex: none;
+	width: 17px;
+	height: 17px;
+	margin-top: 1px;
+	color: var(--ink);
+}
+.phead-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}

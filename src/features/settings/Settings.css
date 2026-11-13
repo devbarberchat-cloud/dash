@@ -1,0 +1,41 @@
+.settings {
+	max-width: 720px;
+	border-top: 1px solid var(--line);
+}
+.settings-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px 24px;
+	padding-block: 22px;
+	border-bottom: 1px solid var(--line);
+}
+.settings-name {
+	display: block;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 16px;
+}
+
+/* every salon the user manages */
+.salons-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 16px 22px;
+}
+.salons-row .row-text {
+	flex: 1;
+	font-family: var(--font-heading);
+}
+.salon-new {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 560px;
+}
+.salon-new-foot {
+	display: flex;
+	gap: 10px;
+}

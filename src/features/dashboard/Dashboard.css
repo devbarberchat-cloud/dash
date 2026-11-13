@@ -1,0 +1,800 @@
+.dash {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(28px, 4vw, 44px);
+}
+/* refetching keeps what is on screen, dimmed */
+.is-refreshing {
+	opacity: 0.5;
+}
+
+/* who is in the salon, as small as a game's status line: a count, a bar that
+   fills with the share of the team present, and a name tag per barber */
+.hud {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 14px;
+	max-width: 100%;
+}
+.hud-count {
+	display: grid;
+	grid-template-columns: auto auto;
+	align-items: baseline;
+	gap: 5px 8px;
+	flex: none;
+	font-size: 12.5px;
+	line-height: 1.2;
+	color: var(--muted);
+}
+.hud-count b {
+	justify-self: end;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--ink);
+}
+.hud-bar {
+	grid-column: 1 / -1;
+	display: block;
+	height: 3px;
+	border-radius: 2px;
+	background: var(--line);
+	overflow: hidden;
+}
+.hud-bar > i {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--st-done);
+	transition: width 0.55s var(--ease-out);
+}
+.hud-team {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	min-width: 0;
+}
+.hud-who {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 30px;
+	padding: 0 10px 0 4px;
+	border: 1px solid var(--pill-line);
+	border-radius: var(--r-pill);
+	background: var(--canvas);
+	font-family: var(--font-heading);
+	font-weight: 500;
+	font-size: 12.5px;
+	white-space: nowrap;
+	color: var(--muted);
+}
+/* a small tag, a finger-sized target */
+.hud-who::after {
+	content: '';
+	position: absolute;
+	inset: -7px 0;
+}
+.hud-who.is-in {
+	color: var(--ink);
+}
+.hud-face {
+	position: relative;
+	display: block;
+}
+.hud-face::after {
+	content: '';
+	position: absolute;
+	inset-inline-end: -3px;
+	bottom: -3px;
+	width: 6px;
+	height: 6px;
+	border: 2px solid var(--canvas);
+	border-radius: 50%;
+	background: var(--faint);
+	box-sizing: content-box;
+}
+.hud-who.is-in .hud-face::after {
+	background: var(--st-done);
+}
+.hud-who:not(.is-in) .avatar {
+	filter: grayscale(1);
+	opacity: 0.55;
+}
+/* on a phone the faces are enough: the whole line stays one line */
+@container page (max-width: 560px) {
+	.hud-team {
+		gap: 4px;
+	}
+	.hud-who {
+		padding: 0 4px;
+	}
+	.hud-name {
+		display: none;
+	}
+}
+
+/* first: the booking that waits for an answer */
+.act {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.act-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+}
+.act-head h2 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: clamp(20px, 1.8vw, 24px);
+	line-height: 1.25;
+	letter-spacing: -0.02em;
+}
+.act-count {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	min-width: 24px;
+	height: 24px;
+	padding-inline: 7px;
+	border-radius: var(--r-pill);
+	background: #e5484d;
+	color: #fff;
+	font-family: var(--font-body);
+	font-size: 12.5px;
+	font-weight: 600;
+	letter-spacing: 0;
+	line-height: 1;
+}
+.act-step,
+.rev-nav {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13.5px;
+	color: var(--muted);
+}
+.act-step button,
+.rev-nav button {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border: 1px solid var(--pill-line);
+	border-radius: 50%;
+	color: var(--ink);
+}
+.act-step button:disabled,
+.rev-nav button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+.act-step svg,
+.rev-nav svg {
+	width: 16px;
+	height: 16px;
+}
+[dir='rtl'] .act-step svg,
+[dir='rtl'] .rev-nav svg {
+	scale: -1 1;
+}
+.act-step span {
+	min-width: 62px;
+	text-align: center;
+}
+
+/* black while it waits for an answer, so it is read first; white when it is
+   only the next client */
+.act-card {
+	--soft: rgba(255, 255, 255, 0.74);
+	--dim: rgba(255, 255, 255, 0.6);
+	--rule: rgba(255, 255, 255, 0.14);
+	--edge: rgba(255, 255, 255, 0.34);
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+	padding: clamp(20px, 3cqi, 30px);
+	border-radius: var(--r-list);
+	background: #0a0a0a;
+	color: #fff;
+}
+.act-card--quiet {
+	--soft: var(--muted);
+	--dim: var(--muted);
+	--rule: var(--line-soft);
+	--edge: rgba(0, 0, 0, 0.22);
+	border: 1px solid var(--line);
+	background: var(--canvas);
+	color: var(--ink);
+}
+.act-top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 12px;
+}
+.act-kind {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 13.5px;
+}
+.act-kind i {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+.act-pill {
+	padding: 5px 11px;
+	border-radius: var(--r-pill);
+	background: var(--warn-wash);
+	color: var(--warn);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+.act-pill.is-bad {
+	background: var(--bad-wash);
+	color: var(--bad);
+}
+.act-body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+	align-items: end;
+	gap: 24px 40px;
+}
+.act-info {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+.act-when {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 12px;
+}
+.act-when b {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: clamp(40px, 6cqi, 56px);
+	line-height: 1;
+	letter-spacing: -0.035em;
+}
+.act-when span {
+	font-family: var(--font-heading);
+	font-weight: 500;
+	font-size: 17px;
+	color: var(--soft);
+}
+.act-client {
+	margin-top: 16px;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 19px;
+	line-height: 1.3;
+	letter-spacing: -0.01em;
+}
+.act-services {
+	margin-top: 2px;
+	color: var(--soft);
+}
+.act-facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 32px;
+	margin-top: 18px;
+	padding-top: 16px;
+	border-top: 1px solid var(--rule);
+}
+.act-facts dt {
+	font-size: 12.5px;
+	color: var(--dim);
+}
+.act-facts dd {
+	margin-top: 2px;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 15px;
+}
+.act-note {
+	margin-top: 14px;
+	font-size: 14px;
+	font-style: italic;
+	color: var(--soft);
+}
+
+/* the answer: one large button, its opposite beside it */
+.act-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+}
+.act-pair {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 10px;
+}
+.act-pair .btn {
+	width: 100%;
+	height: 56px;
+	padding-inline: 14px;
+	font-size: 16px;
+	font-weight: 600;
+}
+.act-card:not(.act-card--quiet) .btn--outline,
+.act-card:not(.act-card--quiet) .btn--outline:hover:not(:disabled) {
+	background: transparent;
+	color: #fff;
+	box-shadow: inset 0 0 0 1px var(--edge);
+}
+.act-card:not(.act-card--quiet) .btn--white:hover:not(:disabled) {
+	background: #fff;
+}
+.act-actions > .text-btn {
+	align-self: center;
+	font-size: 14px;
+	color: inherit;
+	text-decoration-color: var(--edge);
+}
+.act-delay {
+	display: grid;
+	grid-template-columns: auto 1fr 1fr;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	color: var(--soft);
+}
+.act-delay button {
+	height: 40px;
+	border-radius: var(--r-pill);
+	box-shadow: inset 0 0 0 1px var(--edge);
+	color: #fff;
+	font-family: var(--font-heading);
+	font-size: 14px;
+	font-weight: 600;
+}
+.act-card--quiet .act-delay button {
+	color: var(--ink);
+}
+.act-readonly {
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: var(--soft);
+}
+.act-none {
+	padding: 22px;
+	border: 1px dashed var(--line);
+	border-radius: var(--r-list);
+	color: var(--muted);
+}
+@container page (max-width: 720px) {
+	.act-body {
+		grid-template-columns: minmax(0, 1fr);
+		align-items: stretch;
+	}
+	.act-pair {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.act-pair--one {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* the way to every booking, with how many wait in each state */
+.act-all {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px 24px;
+	padding: 14px 20px;
+	border: 1px solid var(--line);
+	border-radius: var(--r-list);
+}
+.act-all dl {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 26px;
+}
+/* the name comes first in the markup, the number first on screen */
+.act-all dl > div {
+	display: flex;
+	flex-direction: row-reverse;
+	align-items: baseline;
+	gap: 6px;
+}
+.act-all dd {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 18px;
+}
+.act-all dt {
+	font-size: 13.5px;
+	color: var(--muted);
+}
+.act-all-go {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 14px;
+	white-space: nowrap;
+}
+.act-all-go svg {
+	width: 16px;
+	height: 16px;
+}
+[dir='rtl'] .act-all-go svg {
+	scale: -1 1;
+}
+
+/* last: the figures, with the period they cover chosen right beside them */
+.kpi {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(26px, 3.5vw, 40px);
+	padding-top: clamp(24px, 3vw, 36px);
+	border-top: 1px solid var(--line);
+}
+.kpi-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 10px 20px;
+}
+.kpi-head h2 {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: clamp(20px, 1.8vw, 24px);
+	line-height: 1.25;
+	letter-spacing: -0.02em;
+}
+.kpi-body {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(36px, 5vw, 56px);
+	transition: opacity 0.3s var(--ease);
+}
+.kpi .sec-head {
+	align-items: center;
+}
+.kpi .sec-head h3 {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 17px;
+	line-height: 1.3;
+	letter-spacing: -0.01em;
+}
+
+/* revenue, a week at a time */
+.rev-facts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 22px;
+	margin-bottom: 20px;
+	font-size: 14px;
+	color: var(--muted);
+}
+.rev-facts b {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	color: var(--ink);
+}
+.rev-facts span:first-child b {
+	font-size: 24px;
+	letter-spacing: -0.02em;
+}
+.rev-facts b.up {
+	color: var(--good);
+}
+.rev-facts b.down {
+	color: var(--bad);
+}
+.rev-note {
+	margin-top: 12px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--muted);
+}
+
+/* per barber: expired requests, late starts, services that ran over */
+.lapses {
+	width: 100%;
+	border-collapse: collapse;
+}
+.lapses thead th {
+	padding: 0 12px 10px;
+	font-weight: 500;
+	font-size: 13px;
+	text-align: start;
+	vertical-align: bottom;
+	color: var(--muted);
+}
+.lapses thead th:first-child {
+	padding-inline-start: 0;
+}
+.lapses thead i,
+.lapses-key dt i {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin-inline-end: 7px;
+	border-radius: 50%;
+}
+.lapses tbody tr {
+	border-top: 1px solid var(--line-soft);
+}
+.lapses tfoot tr {
+	border-top: 1px solid var(--line);
+}
+.lapses tbody th,
+.lapses tfoot th {
+	padding: 14px 12px 14px 0;
+	font-weight: inherit;
+	text-align: start;
+}
+.lapses td {
+	width: 21%;
+	padding: 14px 12px;
+	vertical-align: top;
+}
+.lapses td b {
+	display: block;
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-size: 18px;
+	line-height: 1.2;
+}
+.lapses td b.is-none {
+	font-weight: 500;
+	color: var(--muted);
+}
+.lapses-bar {
+	display: block;
+	max-width: 160px;
+	height: 4px;
+	margin-top: 8px;
+	border-radius: 2px;
+	background: var(--surface-2);
+	overflow: hidden;
+}
+.lapses-bar > span {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+}
+.lapses td small {
+	display: block;
+	min-height: 1.5em;
+	margin-top: 6px;
+	font-size: 12.5px;
+	color: var(--muted);
+}
+.lapses-who {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+.lapses-who > span {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+.lapses-who b {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 14.5px;
+	line-height: 1.3;
+}
+.lapses-who small {
+	font-size: 13px;
+	color: var(--muted);
+}
+/* the salon's line starts under the names, past the photos */
+.lapses tfoot .lapses-who {
+	padding-inline-start: 48px;
+}
+.lapses-key {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px 24px;
+	margin-top: 4px;
+	padding-top: 16px;
+	border-top: 1px solid var(--line-soft);
+	font-size: 13px;
+	line-height: 1.5;
+}
+.lapses-key dt {
+	font-family: var(--font-heading);
+	font-weight: 600;
+}
+.lapses-key dd {
+	color: var(--muted);
+}
+.lapses-note {
+	margin-top: 12px;
+	font-size: 13px;
+	color: var(--muted);
+}
+@container page (max-width: 640px) {
+	/* each barber becomes a block: the name, then the three counts side by side */
+	.lapses,
+	.lapses tbody,
+	.lapses tfoot {
+		display: block;
+	}
+	.lapses thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+	.lapses tr {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 12px 10px;
+		padding-block: 16px;
+	}
+	.lapses tbody th,
+	.lapses tfoot th {
+		grid-column: 1 / -1;
+		padding: 0;
+	}
+	.lapses td {
+		width: auto;
+		padding: 0;
+	}
+	.lapses td::before {
+		content: attr(data-label);
+		display: block;
+		min-height: 2.6em;
+		margin-bottom: 4px;
+		font-size: 12px;
+		line-height: 1.3;
+		color: var(--muted);
+	}
+	.lapses tfoot .lapses-who {
+		padding-inline-start: 0;
+	}
+	.lapses-key {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* one barber's week, a line per day */
+.presence-note {
+	margin: 0;
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: var(--surface);
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: var(--muted);
+}
+.presence-legend {
+	display: flex;
+	gap: 16px;
+	margin: 0;
+	font-size: 13px;
+	color: var(--muted);
+}
+.presence-legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+.presence-legend i {
+	width: 12px;
+	height: 8px;
+	border-radius: 2px;
+	background: var(--bad-wash);
+}
+.presence-legend i.is-in {
+	background: var(--st-done);
+}
+.presence-days {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.presence-days > li {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding-block: 14px;
+	border-bottom: 1px solid var(--line-soft);
+}
+.presence-days > li:last-child {
+	border-bottom: 0;
+}
+.presence-day-head {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 4px 12px;
+	font-size: 13px;
+	color: var(--muted);
+}
+.presence-day-head b {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--ink);
+}
+.presence-track {
+	position: relative;
+	height: 12px;
+	border-radius: 4px;
+	background: var(--surface-2);
+	overflow: hidden;
+}
+.presence-track span {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background: var(--bad-wash);
+}
+.presence-track span.is-in {
+	background: var(--st-done);
+}
+.presence-scale {
+	position: relative;
+	height: 14px;
+	font-size: 11px;
+	color: var(--faint);
+}
+.presence-scale span {
+	position: absolute;
+	transform: translateX(-50%);
+}
+.presence-scale span:first-child {
+	transform: none;
+}
+.presence-scale span:last-child {
+	transform: translateX(-100%);
+}
+.presence-slots {
+	margin: 0;
+	font-size: 12.5px;
+	color: var(--muted);
+}
+.presence-face {
+	display: block;
+	margin: 28px 0 0 28px;
+}
+
+/* waiting on the owner: red until it is handled */
+.act-all dl > div.is-alert {
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--danger, #dc2626) 10%, transparent);
+}
+.act-all dl > div.is-alert dd,
+.act-all dl > div.is-alert dt {
+	color: var(--danger, #dc2626);
+}
+.act-all dl > div.is-alert dt {
+	font-weight: 600;
+}

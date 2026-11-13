@@ -1,0 +1,61 @@
+/* BarberChat Pro: tokens. Taken from barberchat.ma's salon page: white, the
+   app menu's greys, hairlines, Poppins and Inter. Color appears only where it
+   says something: a state (green, amber, red) or the brand's indigo on what is
+   selected. One theme, like the site. */
+
+:root {
+	--canvas: #ffffff;
+	--surface: #f6f6f7;
+	--surface-2: #f3f4f6;
+	--ink: #111827;
+	--muted: #6b7280; /* 4.8:1 on white: the grey for any small text */
+	--faint: #9ca3af; /* decoration and disabled only, never for text that matters */
+	--line: #e5e7eb;
+	--line-soft: #f0f0f3;
+	--pill-line: #e2e2e2;
+	--field: #f4f4f5;
+	--field-line: #e6e6e8;
+	--scrim: rgba(17, 24, 39, 0.6);
+
+	--indigo: #2b086c;
+	--indigo-hover: #3b1590;
+	--mauve: #510a84; /* BarberChat's official purple */
+	--mauve-wash: #f3ecfa;
+
+	/* booking states (checked with the dataviz palette validator) */
+	--st-done: #1b7d52;
+	--st-pending: #d99a00;
+	--st-confirmed: #2a62a3;
+	--st-cancelled: #6f5ec4;
+	--st-noshow: #d23f45;
+	--good: #146c45;
+	--warn: #8a5b00;
+	--bad: #b3262c;
+	--bad-wash: #fde3e2;
+	--warn-wash: #fdf1d6;
+	--good-wash: #e2f6e7;
+
+	--font-heading: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	--r-field: 12px;
+	--r-search: 16px;
+	--r-list: 20px;
+	--r-photo: 22px;
+	--r-pill: 999px;
+	/* the app's barber frame: 61 × 108, corners 15% of the width */
+	--barber-ratio: 61 / 108;
+	--barber-r: 15% / 8.4375%;
+
+	--shadow-list: 0 1px 2px rgba(17, 24, 39, 0.03), 0 10px 30px -18px rgba(17, 24, 39, 0.12);
+	--shadow-pop: 0 14px 30px -14px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.04);
+
+	--ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+	--pad: max(clamp(20px, 4.5vw, 64px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+	--max: 1280px;
+
+	color-scheme: light;
+}

@@ -1,0 +1,168 @@
+.promos {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+/* one card per promotion */
+.promo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+	gap: 16px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.promo {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 18px 20px 20px;
+	background: var(--canvas);
+	border: 1px solid var(--line);
+	border-radius: var(--r-list);
+}
+.promo-top {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 32px;
+	padding-inline-end: 36px;
+}
+.promo-name {
+	min-width: 0;
+	font-family: var(--font-heading);
+	font-size: 16px;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.promo-state {
+	flex-shrink: 0;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: var(--mauve-wash);
+	color: var(--mauve);
+	font-size: 12px;
+	font-weight: 600;
+}
+.promo-state.is-off {
+	background: var(--surface-2);
+	color: var(--muted);
+}
+.promo > :last-child {
+	position: absolute;
+	top: 14px;
+	inset-inline-end: 10px;
+}
+.promo-value {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0;
+	font-family: var(--font-heading);
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+.promo-value small {
+	font-family: var(--font-body);
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--muted);
+}
+.promo-code {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	align-self: flex-start;
+	height: 32px;
+	padding-inline: 12px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--canvas);
+	color: var(--mauve);
+	font-family: var(--font-heading);
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.promo-code svg {
+	color: var(--muted);
+}
+.promo-usage {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: auto;
+	padding-top: 14px;
+	border-top: 1px solid var(--line-soft);
+	color: var(--muted);
+	font-size: 13px;
+}
+.promo-usage p {
+	margin: 0;
+}
+.promo-meter {
+	height: 4px;
+	border-radius: 2px;
+	background: var(--surface-2);
+	overflow: hidden;
+}
+.promo-meter span {
+	display: block;
+	height: 100%;
+	background: var(--mauve);
+}
+.promo-form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.promo-two {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 14px;
+}
+.promo-set {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	border: 0;
+}
+.promo-services {
+	max-height: 220px;
+	overflow-y: auto;
+}
+.promo-services label {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 44px;
+	border-bottom: 1px solid var(--line-soft);
+	cursor: pointer;
+}
+.promo-services label span:first-of-type {
+	flex: 1;
+}
+.promo-services input {
+	width: 18px;
+	height: 18px;
+	accent-color: var(--ink);
+}
+.promo-slot {
+	display: grid;
+	grid-template-columns: 1.4fr 1fr 1fr auto;
+	align-items: center;
+	gap: 8px;
+}
+.promo-slot .control {
+	height: 44px;
+	padding-inline: 10px;
+}
+.promo-foot {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}

@@ -1,0 +1,147 @@
+/* The site's pill: black, a dot that swells when pressed. */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	border-radius: var(--r-pill);
+	font-family: var(--font-heading);
+	font-weight: 500;
+	white-space: nowrap;
+	transition:
+		background 0.3s var(--ease),
+		color 0.3s var(--ease),
+		box-shadow 0.3s var(--ease),
+		scale 0.4s var(--ease-spring);
+}
+.btn--md {
+	height: 48px;
+	padding: 0 24px 0 22px;
+	font-size: 15px;
+}
+.btn--sm {
+	height: 40px;
+	padding: 0 16px 0 15px;
+	font-size: 14px;
+	gap: 8px;
+}
+.btn svg {
+	width: 18px;
+	height: 18px;
+	flex: none;
+}
+.btn--sm svg {
+	width: 16px;
+	height: 16px;
+}
+.btn--dot::before {
+	content: '';
+	width: 7px;
+	height: 7px;
+	flex: none;
+	border-radius: 50%;
+	background: currentColor;
+	transition: scale 0.4s var(--ease-spring);
+}
+.btn:active:not(:disabled) {
+	scale: 0.96;
+	transition-duration: 0.12s;
+}
+.btn--dot:active:not(:disabled)::before {
+	scale: 1.7;
+	transition-duration: 0.12s;
+}
+.btn-after {
+	display: inline-flex;
+	transition: translate 0.4s var(--ease-spring);
+}
+.btn:active .btn-after {
+	translate: 4px 0;
+}
+.btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.btn--ink {
+	background: #0a0a0a;
+	color: #fff;
+}
+.btn--ink:hover:not(:disabled) {
+	background: var(--indigo);
+}
+.btn--outline {
+	background: transparent;
+	color: var(--ink);
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+.btn--outline:hover:not(:disabled) {
+	background: #0a0a0a;
+	color: #fff;
+	box-shadow: none;
+}
+.btn--quiet {
+	background: transparent;
+	color: var(--muted);
+}
+.btn--quiet:hover:not(:disabled) {
+	background: var(--surface-2);
+	color: var(--ink);
+}
+.btn--danger {
+	background: var(--bad);
+	color: #fff;
+}
+.btn--danger:hover:not(:disabled) {
+	background: #8f1d22;
+}
+.btn--white {
+	background: #fff;
+	color: #0a0a0a;
+}
+.btn--white:hover:not(:disabled) {
+	background: var(--surface-2);
+}
+
+.btn-spin {
+	animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+	to {
+		rotate: 360deg;
+	}
+}
+
+.icon-btn {
+	display: inline-grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	flex: none;
+	border-radius: 50%;
+	color: var(--ink);
+	transition:
+		background 0.25s var(--ease),
+		scale 0.4s var(--ease-spring);
+}
+.icon-btn:hover {
+	background: var(--surface-2);
+}
+.icon-btn:active {
+	scale: 0.9;
+	transition-duration: 0.12s;
+}
+.icon-btn svg {
+	width: 19px;
+	height: 19px;
+}
+
+@media (pointer: coarse) {
+	.icon-btn {
+		width: 44px;
+		height: 44px;
+	}
+	.btn--sm {
+		height: 44px;
+	}
+}

@@ -1,0 +1,203 @@
+/* revenue bars */
+.rchart {
+	position: relative;
+	width: 100%;
+}
+.rchart svg {
+	display: block;
+	overflow: visible;
+	touch-action: pan-y;
+	border-radius: 6px;
+}
+.rc-grid {
+	stroke: var(--line);
+	stroke-width: 1;
+}
+.rc-tick {
+	fill: var(--muted);
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+}
+.rc-bar {
+	fill: #111827;
+	transition: fill 0.2s var(--ease);
+}
+.rc-bar.is-dim {
+	fill: #d1d5db;
+}
+.rc-bar.is-hot {
+	fill: var(--indigo);
+}
+.rc-closed {
+	fill: var(--faint);
+}
+.rc-tip {
+	position: absolute;
+	top: -8px;
+	width: 160px;
+	display: flex;
+	flex-direction: column;
+	padding: 9px 12px;
+	border-radius: 13px;
+	background: #1d1b20;
+	color: #fff;
+	box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.7);
+	pointer-events: none;
+	line-height: 1.3;
+}
+.rc-tip b {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 16px;
+}
+.rc-tip span {
+	font-size: 12.5px;
+	opacity: 0.75;
+}
+
+.rtable {
+	max-height: 260px;
+	overflow-y: auto;
+}
+.rtable table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+.rtable th,
+.rtable td {
+	padding: 10px 2px;
+	text-align: left;
+	border-bottom: 1px solid var(--line-soft);
+}
+.rtable th {
+	position: sticky;
+	top: 0;
+	background: #fff;
+	font-weight: 500;
+	color: var(--muted);
+}
+.rtable td:last-child,
+.rtable th:last-child {
+	text-align: right;
+}
+
+/* bookings by outcome */
+.sbar {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+.sbar-track {
+	display: flex;
+	gap: 3px;
+	height: 12px;
+}
+.sbar-part {
+	min-width: 6px;
+	border-radius: 4px;
+	transition: opacity 0.2s var(--ease);
+}
+.sbar-part.is-dim {
+	opacity: 0.3;
+}
+/* one small card per state: its name, its count, its share */
+.sbar-legend {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 132px), 1fr));
+	gap: 10px;
+}
+.sbar-legend li {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-areas: 'key name' 'count count' 'share share';
+	align-items: center;
+	column-gap: 8px;
+	row-gap: 2px;
+	padding: 14px 16px;
+	border-radius: 14px;
+	background: var(--surface);
+}
+.sbar-key {
+	grid-area: key;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+.sbar-name {
+	grid-area: name;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 13px;
+	color: var(--muted);
+}
+.sbar-legend b {
+	grid-area: count;
+	margin-top: 6px;
+	font-family: var(--font-heading);
+	font-size: 22px;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	font-variant-numeric: tabular-nums;
+}
+.sbar-share {
+	grid-area: share;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+/* a week of revenue, every bar numbered */
+.dbars {
+	width: 100%;
+}
+.dbars svg {
+	display: block;
+	overflow: visible;
+}
+.db-bar {
+	fill: #111827;
+}
+.db-average {
+	stroke: var(--faint);
+	stroke-width: 1;
+	stroke-dasharray: 4 4;
+}
+/* behind an amount, so the average line never runs through its digits */
+.db-back {
+	fill: var(--canvas);
+}
+.db-amount {
+	fill: var(--ink);
+	font-family: var(--font-heading);
+	font-size: 12.5px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+.db-amount.is-none {
+	fill: var(--muted);
+	font-weight: 400;
+}
+.db-day {
+	fill: var(--muted);
+	font-family: var(--font-body);
+	font-size: 12.5px;
+}
+.is-today .db-day {
+	fill: var(--ink);
+	font-weight: 600;
+}
+.db-count {
+	fill: var(--muted);
+	font-family: var(--font-body);
+	font-size: 11.5px;
+	font-variant-numeric: tabular-nums;
+}
+.db-note {
+	margin-top: 12px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--muted);
+}

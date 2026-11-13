@@ -1,0 +1,219 @@
+/* What list pages share: the filters above a list, the search field, the table, the pager. */
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+}
+.toolbar .control--sm {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+.toolbar-end {
+	margin-inline-start: auto;
+}
+
+.search {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1 1 260px;
+	max-width: 360px;
+	height: 46px;
+	padding-inline: 16px 6px;
+	border-radius: var(--r-search);
+	background: var(--field);
+	border: 1px solid var(--field-line);
+	cursor: text;
+}
+.search:focus-within {
+	border-color: #a1a1a6;
+	background: var(--canvas);
+}
+.search > svg {
+	flex: none;
+	width: 18px;
+	height: 18px;
+	color: var(--muted);
+}
+.search input {
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+	border: 0;
+	outline: 0;
+	background: none;
+	font-size: 15px;
+}
+.search input::-webkit-search-cancel-button {
+	display: none;
+}
+.search input::placeholder {
+	color: var(--muted);
+}
+.search-clear {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	color: var(--muted);
+}
+.search-clear svg {
+	width: 16px;
+	height: 16px;
+}
+.search--block {
+	flex: none;
+	width: 100%;
+	max-width: none;
+}
+
+/* a table on wide pages; one block per row on narrow ones */
+.dtable {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+.dtable th,
+.dtable td {
+	padding: 14px 12px;
+	text-align: start;
+	vertical-align: top;
+	border-bottom: 1px solid var(--line);
+}
+.dtable th:first-child,
+.dtable td:first-child {
+	padding-inline-start: 0;
+}
+.dtable th:last-child,
+.dtable td:last-child {
+	padding-inline-end: 0;
+}
+.dtable thead th {
+	font-weight: 500;
+	color: var(--muted);
+	white-space: nowrap;
+}
+.dtable .end {
+	text-align: end;
+	white-space: nowrap;
+}
+.dtable b {
+	font-family: var(--font-heading);
+	font-weight: 600;
+}
+.dtable small {
+	display: block;
+	font-size: 13px;
+	color: var(--muted);
+}
+.dtable a:hover b,
+.dtable a:hover {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.is-refreshing {
+	opacity: 0.5;
+	transition: opacity 0.3s var(--ease);
+}
+
+.pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	font-size: 14px;
+	color: var(--muted);
+}
+.pager-btn {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	border: 1px solid var(--pill-line);
+	color: var(--ink);
+}
+.pager-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+.pager-btn svg {
+	width: 18px;
+	height: 18px;
+}
+[dir='rtl'] .pager-btn svg {
+	scale: -1 1;
+}
+
+@container page (max-width: 720px) {
+	.search {
+		flex-basis: 100%;
+		max-width: none;
+	}
+	.dtable thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+	.dtable,
+	.dtable tbody,
+	.dtable tr,
+	.dtable td {
+		display: block;
+	}
+	.dtable tr {
+		padding-block: 14px;
+		border-bottom: 1px solid var(--line);
+	}
+	.dtable td {
+		display: flex;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 3px 0;
+		border: 0;
+	}
+	/* each value says what it is, since the header row is gone */
+	.dtable td::before {
+		content: attr(data-label);
+		flex: none;
+		color: var(--muted);
+	}
+	.dtable td > * {
+		text-align: end;
+	}
+	.dtable td.dtable-lead {
+		display: block;
+		padding-bottom: 6px;
+	}
+	.dtable td.dtable-lead::before {
+		content: none;
+	}
+	.dtable td.dtable-lead > * {
+		text-align: start;
+	}
+}
+@media (pointer: coarse) {
+	.search input {
+		font-size: 16px;
+	}
+	.pager-btn {
+		width: 44px;
+		height: 44px;
+	}
+}
+
+/* the secondary actions of a row */
+.more {
+	position: relative;
+}
+.more .menu {
+	inset-inline: auto 0;
+	top: calc(100% + 4px);
+	width: 240px;
+}
