@@ -40,7 +40,6 @@ export function PromosPage() {
 	return (
 		<>
 			<PageHeader
-				kicker={shop.name}
 				title={t('promos.title')}
 				actions={
 					<Button dot={false} onClick={() => setEditing('new')}>

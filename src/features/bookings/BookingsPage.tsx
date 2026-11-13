@@ -15,6 +15,7 @@ import { SearchInput, StatusBadge } from '@/ui/lists';
 import { MoreMenu } from '@/ui/MoreMenu';
 import { PageHeader } from '@/ui/PageHeader';
 import { useToast } from '@/ui/Toast';
+import { Agenda } from './Agenda';
 import './Bookings.css';
 
 type Tab = 'pending' | 'reschedule' | 'confirmed' | 'inProgress' | 'today' | 'upcoming';
@@ -30,8 +31,6 @@ const TABS: Record<Tab, { list: keyof LiveBookings; label: MessageKey; empty: Me
 const TAB_ORDER = Object.keys(TABS) as Tab[];
 /** Tabs where the salon still owes an answer (shown in the top "Active" section). */
 const ACTIVE_TABS: Tab[] = ['pending', 'reschedule'];
-/** Tabs that show the booked schedule (shown in the bottom "Schedule" section). Start / finish of a service is up to the barber, so it lives in their own tools. */
-const SCHEDULE_TABS: Tab[] = ['confirmed', 'inProgress', 'today', 'upcoming'];
 
 /** What the confirmation says for each action, and the name of its button. */
 const ACTIONS: Record<Exclude<BookingAction, 'offer_reschedule_slots'>, { label: MessageKey; title: MessageKey; text: MessageKey; danger?: boolean }> = {
@@ -56,7 +55,6 @@ export function BookingsPage() {
 	const shop = useCurrentShop();
 	const { data, isPending, isFetching, error, refetch, dataUpdatedAt } = useLiveBookings(shop.id);
 	const [activeTab, setActiveTab] = useState<Tab>('pending');
-	const [scheduleTab, setScheduleTab] = useState<Tab>('today');
 	const [search, setSearch] = useState('');
 	const [barber, setBarber] = useState('');
 	const [acting, setActing] = useState<{ booking: Booking; action: SimpleAction } | null>(null);
@@ -78,14 +76,12 @@ export function BookingsPage() {
 	const filterRows = (key: Tab) =>
 		listOf(key).filter((booking) => (!barber || String(booking.barber?.id) === barber) && (!term || `${clientName(booking)} ${booking.booking_number}`.toLowerCase().includes(term)));
 	const activeRows = filterRows(activeTab);
-	const scheduleRows = filterRows(scheduleTab);
 	const waiting = listOf('pending').length;
 	const activeTotal = waiting + listOf('reschedule').length;
 
 	return (
 		<>
 			<PageHeader
-				kicker={shop.name}
 				title={t('live.title')}
 				actions={
 					<>
@@ -146,21 +142,7 @@ export function BookingsPage() {
 				<h2 id="bookings-schedule" className="bookings-heading">
 					{t('live.sectionSchedule')}
 				</h2>
-				<ChipGroup
-					label={t('live.sectionSchedule')}
-					value={scheduleTab}
-					onChange={setScheduleTab}
-					options={SCHEDULE_TABS.map((key) => ({ value: key, label: t(TABS[key].label), count: listOf(key).length }))}
-				/>
-				{scheduleRows.length === 0 ? (
-					<p className="muted bookings-none">{t(term || barber ? 'live.noMatch' : TABS[scheduleTab].empty)}</p>
-				) : (
-					<ul className="list">
-						{scheduleRows.map((booking) => (
-							<BookingRow key={booking.id} booking={booking} canAct={canAct} onAction={(action) => setActing({ booking, action })} onOffer={() => setOffering(booking)} />
-						))}
-					</ul>
-				)}
+				<Agenda live={data} barber={barber} term={term} canAct={canAct} onAction={(booking, action) => setActing({ booking, action })} onOffer={setOffering} />
 			</section>
 
 			<ActionDialog acting={acting} onClose={() => setActing(null)} />

@@ -38,7 +38,7 @@ export function AnalyticsPage() {
 
 	return (
 		<>
-			<PageHeader kicker={shop.name} title={t('nav.analytics')} actions={<PeriodFilter value={period} onChange={setPeriod} />} />
+			<PageHeader title={t('nav.analytics')} actions={<PeriodFilter value={period} onChange={setPeriod} />} />
 
 			{failed && !revenue.data ? (
 				<Failure error={failed} onRetry={() => void revenue.refetch()} />

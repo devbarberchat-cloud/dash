@@ -50,7 +50,7 @@ export function HistoryPage() {
 
 	return (
 		<>
-			<PageHeader kicker={shop.name} title={t('history.title')} />
+			<PageHeader title={t('history.title')} />
 
 			<div className="bookings">
 				<div className="toolbar">

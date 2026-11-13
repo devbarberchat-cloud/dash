@@ -549,7 +549,13 @@
 		"updateAgendaDesc": "Mettre à jour les heures d'ouverture et de fermeture pour ce jour. Vous pouvez également marquer le jour comme fermé.",
 		"warningUpdate": "Attention : Toutes les réservations existantes ce jour seront annulées lorsque vous mettrez à jour l'agenda.",
 		"markAsClosed": "Marquer ce jour comme fermé",
-		"closedDayDesc": "Ce jour sera marqué comme fermé. Les heures d'ouverture et de fermeture seront ignorées."
+		"closedDayDesc": "Ce jour sera marqué comme fermé. Les heures d'ouverture et de fermeture seront ignorées.",
+		"previous": "Jour précédent",
+		"next": "Jour suivant",
+		"today": "Aujourd’hui",
+		"empty": "Aucun rendez-vous ce jour-là.",
+		"prevInSlot": "Rendez-vous précédent sur ce créneau",
+		"nextInSlot": "Rendez-vous suivant sur ce créneau"
 	},
 	"staff": {
 		"staffMembers": "Membres du personnel",

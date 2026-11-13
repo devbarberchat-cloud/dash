@@ -91,7 +91,6 @@ export function ServicesMenuPage() {
 	return (
 		<>
 			<PageHeader
-				kicker={shop.name}
 				title={t('menu.title')}
 				actions={
 					<Button dot={false} onClick={() => setAdding(true)}>

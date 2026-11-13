@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
 import { useBarberAnalytics, type BarberAnalytics } from '@/api/barbers';
+import { useBookingHistory } from '@/api/bookings';
 import { mediaUrl } from '@/api/http';
 import { useStaff } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
@@ -73,6 +74,7 @@ export function BarberPage() {
 			) : (
 				<div className={`barber${isFetching ? ' is-refreshing' : ''}`}>
 					<Figures data={data} />
+					<Reliability shopId={shop.id} barberId={barberId} name={name.split(' ')[0] || name} period={RANGES[range]} data={data} />
 
 					<div className="split">
 						<section aria-labelledby="barber-status">
@@ -92,15 +94,7 @@ export function BarberPage() {
 							<div className="sec-head">
 								<h2 id="barber-money">{t('barberDetail.money')}</h2>
 							</div>
-							<Facts
-								rows={[
-									[t('barberDetail.withPromos'), mad(data.revenue_breakdown.total_revenue)],
-									[t('barberDetail.withoutPromos'), mad(data.revenue_breakdown.total_revenue_without_promos)],
-									[t('barberDetail.perBooking'), mad(data.revenue_breakdown.average_revenue_per_booking)],
-									[t('barberDetail.perHour'), mad(data.revenue_breakdown.average_revenue_per_hour)],
-									[t('barberDetail.bookingsPerClient'), decimal(data.client_analytics.average_bookings_per_client)]
-								]}
-							/>
+							<Money data={data} />
 						</section>
 					</div>
 
@@ -110,7 +104,7 @@ export function BarberPage() {
 								<h2 id="barber-services">{t('barberDetail.topServices')}</h2>
 							</div>
 							{data.service_analytics.top_services.length ? (
-								<Facts rows={data.service_analytics.top_services.map((service) => [service.service_title, service.revenue ? mad(service.revenue) : int(service.count)])} />
+								<Bars rows={data.service_analytics.top_services.map((service) => ({ label: service.service_title, value: Number(service.revenue ?? service.count ?? 0), text: service.revenue ? mad(service.revenue) : int(service.count) })).sort((a, b) => b.value - a.value).slice(0, 5)} />
 							) : (
 								<p className="muted">{t('barberDetail.noData')}</p>
 							)}
@@ -120,14 +114,9 @@ export function BarberPage() {
 								<h2 id="barber-busy">{t('barberDetail.busiestDays')}</h2>
 							</div>
 							{data.time_analytics?.peak_days.length ? (
-								<Facts rows={data.time_analytics.peak_days.slice(0, 4).map((row) => [tMaybe(`weekdays.${row.day}`, '—'), t('overview.bookingsCount', { count: row.count })])} />
+								<Week days={data.time_analytics.peak_days} hours={data.time_analytics.peak_hours} />
 							) : (
 								<p className="muted">{t('barberDetail.noData')}</p>
-							)}
-							{Boolean(data.time_analytics?.peak_hours.length) && (
-								<p className="muted barber-hours">
-									{t('barberDetail.busiestHours')} : {data.time_analytics?.peak_hours.slice(0, 3).map((row) => `${String(row.hour).padStart(2, '0')}:00`).join(', ')}
-								</p>
 							)}
 						</section>
 					</div>
@@ -139,6 +128,85 @@ export function BarberPage() {
 				</div>
 			)}
 		</>
+	);
+}
+
+type Period = { start_date: string; end_date: string } | undefined;
+
+/** How many bookings of this barber match one history filter. */
+function useCount(shopId: number, barberId: number, period: Period, filter: { status?: string; cancelled_by?: string }) {
+	const { data } = useBookingHistory(shopId, { ...period, ...filter, barber_id: barberId, page: 1, page_size: 1 });
+	return data?.count ?? 0;
+}
+
+/**
+ * What an owner wants to know about a barber besides money, said in words:
+ * does he answer his requests, and who cancels his bookings.
+ */
+function Reliability({ shopId, barberId, name, period, data }: { shopId: number; barberId: number; name: string; period: Period; data: BarberAnalytics }) {
+	const expired = useCount(shopId, barberId, period, { status: 'expired' });
+	const byBarber = useCount(shopId, barberId, period, { cancelled_by: 'barber' });
+	const byClient = useCount(shopId, barberId, period, { cancelled_by: 'client' });
+	const received = data.total_bookings + expired;
+	const missedRate = received ? (expired / received) * 100 : 0;
+	const tone = missedRate >= 10 ? 'bad' : missedRate >= 4 ? 'warn' : 'good';
+	const cancelled = Math.max(data.cancelled_bookings, byBarber + byClient);
+	const other = cancelled - byBarber - byClient;
+	const share = (n: number) => (cancelled ? (n / cancelled) * 100 : 0);
+	const verdict = { good: `${name} répond presque toujours à ses demandes.`, warn: `${name} laisse passer quelques demandes.`, bad: `${name} laisse passer trop de demandes.` }[tone];
+	const rows: [string, number, string][] = [
+		[`Par ${name}`, byBarber, 'barber'],
+		['Par ses clients', byClient, 'client']
+	];
+	if (other > 0) rows.push(['Par le salon ou BarberChat', other, 'other']);
+
+	return (
+		<div className="split">
+			<section aria-labelledby="barber-missed" className="story">
+				<div className="sec-head">
+					<h2 id="barber-missed">Demandes sans réponse</h2>
+				</div>
+				<p className={`story-big story-big--${tone}`}>
+					<b className="num">{pct(missedRate, 1)}</b>
+					<span>des demandes reçues ont expiré</span>
+				</p>
+				<div className="story-meter" aria-hidden>
+					<i className={`is-${tone}`} style={{ width: `${Math.min(100, missedRate)}%` }} />
+				</div>
+				<p className="story-text">
+					{verdict} Sur <b className="num">{int(received)}</b> demandes reçues, <b className="num">{int(expired)}</b> ont expiré sans qu’il accepte, refuse ou propose un autre créneau.
+				</p>
+			</section>
+
+			<section aria-labelledby="barber-cancel" className="story">
+				<div className="sec-head">
+					<h2 id="barber-cancel">Qui annule ?</h2>
+				</div>
+				{cancelled ? (
+					<>
+						<p className="story-text">
+							<b className="num">{int(cancelled)}</b> réservations annulées sur <b className="num">{int(data.total_bookings)}</b>.
+						</p>
+						<ul className="story-bars">
+							{rows.map(([label, n, key]) => (
+								<li key={key}>
+									<span className="story-bar-label">{label}</span>
+									<span className="story-bar-value num">
+										{int(n)} <small>{pct(share(n), 0)}</small>
+									</span>
+									<span className="story-bar-track" aria-hidden>
+										<i className={`is-${key}`} style={{ width: `${share(n)}%` }} />
+									</span>
+								</li>
+							))}
+						</ul>
+						{byBarber > byClient && <p className="story-text story-text--warn">{name} annule plus souvent que ses clients.</p>}
+					</>
+				) : (
+					<p className="muted">Aucune réservation annulée sur la période.</p>
+				)}
+			</section>
+		</div>
 	);
 }
 
@@ -180,17 +248,84 @@ function Figures({ data }: { data: BarberAnalytics }) {
 	);
 }
 
-/** Name on the left, value on the right, one line each. */
-function Facts({ rows }: { rows: [string, string][] }) {
+/** The money, said as an owner would: what he brings, per visit, per hour, and what promos cost. */
+function Money({ data }: { data: BarberAnalytics }) {
+	const r = data.revenue_breakdown;
+	const gross = Number(r.total_revenue_without_promos);
+	const promo = Math.max(0, gross - Number(r.total_revenue));
 	return (
-		<dl className="pairs">
-			{rows.map(([name, value]) => (
-				<div key={name}>
-					<dt>{name}</dt>
-					<dd className="num">{value}</dd>
+		<div className="story">
+			<div className="tiles-2">
+				<div className="mini">
+					<span>Par visite</span>
+					<b className="num">{mad(r.average_revenue_per_booking)}</b>
 				</div>
+				<div className="mini">
+					<span>Par heure de travail</span>
+					<b className="num">{mad(r.average_revenue_per_hour)}</b>
+				</div>
+			</div>
+			<p className="story-text">
+				Ses clients reviennent en moyenne <b className="num">{decimal(data.client_analytics.average_bookings_per_client)}</b> fois.{' '}
+				{promo > 0 ? (
+					<>
+						Les promotions ont coûté <b className="num">{mad(promo)}</b>, soit <b className="num">{pct(gross ? (promo / gross) * 100 : 0, 1)}</b> de ce qu’il aurait encaissé sans elles.
+					</>
+				) : (
+					'Aucune promotion n’a réduit ses prix.'
+				)}
+			</p>
+		</div>
+	);
+}
+
+/** A ranked list as bars, the first one full. */
+function Bars({ rows }: { rows: { label: string; value: number; text: string }[] }) {
+	const top = Math.max(1, ...rows.map((row) => row.value));
+	return (
+		<ul className="story-bars">
+			{rows.map((row) => (
+				<li key={row.label}>
+					<span className="story-bar-label">{row.label}</span>
+					<span className="story-bar-value num">{row.text}</span>
+					<span className="story-bar-track" aria-hidden>
+						<i className="is-ink" style={{ width: `${(row.value / top) * 100}%` }} />
+					</span>
+				</li>
 			))}
-		</dl>
+		</ul>
+	);
+}
+
+/** The week as seven columns, the busiest one dark, and the hours to staff. */
+function Week({ days, hours }: { days: { day?: number; count: number }[]; hours: { hour?: number; count: number }[] }) {
+	const counts = [0, 1, 2, 3, 4, 5, 6].map((d) => days.find((row) => row.day === d)?.count ?? 0);
+	const top = Math.max(1, ...counts);
+	const best = counts.indexOf(top);
+	const peak = hours.slice(0, 3).map((row) => `${String(row.hour).padStart(2, '0')} h`);
+	return (
+		<div className="story">
+			<div className="week" role="img" aria-label={counts.map((c, d) => `${tMaybe(`weekdays.${d}`, '')} ${c}`).join(', ')}>
+				{counts.map((count, d) => (
+					<div key={d} className={`week-day${d === best ? ' is-top' : ''}`}>
+						<span className="week-count num">{count}</span>
+						<span className="week-bar">
+							<i style={{ height: `${(count / top) * 100}%` }} />
+						</span>
+						<span className="week-name">{tMaybe(`weekdays.${d}`, '').slice(0, 3)}</span>
+					</div>
+				))}
+			</div>
+			<p className="story-text">
+				Son jour le plus chargé est le <b>{tMaybe(`weekdays.${best}`, '').toLowerCase()}</b>
+				{peak.length > 0 && (
+					<>
+						, surtout vers <b className="num">{peak.join(', ')}</b>
+					</>
+				)}
+				.
+			</p>
+		</div>
 	);
 }
 

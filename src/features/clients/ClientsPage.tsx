@@ -44,7 +44,7 @@ export function ClientsPage() {
 
 	return (
 		<>
-			<PageHeader kicker={shop.name} title={t('clientsPage.title')} />
+			<PageHeader title={t('clientsPage.title')} />
 
 			<div className="clients">
 				<div className="toolbar">

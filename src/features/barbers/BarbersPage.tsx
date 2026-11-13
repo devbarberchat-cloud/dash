@@ -77,7 +77,7 @@ export function BarbersPage() {
 
 	return (
 		<>
-			<PageHeader kicker={shop.name} title="Coiffeurs" actions={<Button onClick={() => setAdding(true)}>Ajouter un barbier</Button>} />
+			<PageHeader title="Coiffeurs" actions={<Button onClick={() => setAdding(true)}>Ajouter un barbier</Button>} />
 
 			<div className="toolbar">
 				<label className="search">

@@ -818,7 +818,13 @@
 		"updateAgendaDesc": "Update the opening and closing times for this day. You can also mark the day as closed.",
 		"warningUpdate": "Warning: All existing bookings on this day will be cancelled when you update the agenda.",
 		"markAsClosed": "Mark this day as closed",
-		"closedDayDesc": "This day will be marked as closed. Opening and closing times will be ignored."
+		"closedDayDesc": "This day will be marked as closed. Opening and closing times will be ignored.",
+		"previous": "Previous day",
+		"next": "Next day",
+		"today": "Today",
+		"empty": "No bookings that day.",
+		"prevInSlot": "Previous booking in this slot",
+		"nextInSlot": "Next booking in this slot"
 	},
 	"staff": {
 		"staffMembers": "Staff Members",
