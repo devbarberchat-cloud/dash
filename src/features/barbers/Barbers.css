@@ -325,7 +325,7 @@
 }
 
 /* reliability, told in words */
-.story { display: grid; gap: 12px; align-content: start; }
+.story { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-content: start; min-width: 0; }
 .story-big { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0; }
 .story-big b { font-family: Poppins, sans-serif; font-size: 34px; font-weight: 600; line-height: 1; }
 .story-big span { color: var(--muted); }
@@ -350,10 +350,10 @@
 .story-bar-track .is-client { background: var(--st-cancelled); }
 .story-bar-track .is-other { background: var(--faint); }
 .story-bar-track .is-ink { background: var(--ink); }
-.tiles-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.mini { display: grid; gap: 4px; padding: 14px 16px; border-radius: 14px; background: var(--surface-2); }
+.tiles-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.mini { display: grid; gap: 4px; min-width: 0; padding: 14px 16px; border-radius: 14px; background: var(--surface-2); }
 .mini span { color: var(--muted); font-size: 13px; }
-.mini b { font-family: Poppins, sans-serif; font-size: 22px; font-weight: 600; }
+.mini b { font-family: Poppins, sans-serif; font-size: clamp(18px, 2.2vw, 22px); font-weight: 600; overflow-wrap: anywhere; }
 .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; }
 .week-day { display: grid; gap: 6px; justify-items: center; }
 .week-count { font-size: 12px; color: var(--muted); }

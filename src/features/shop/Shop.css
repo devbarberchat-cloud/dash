@@ -365,3 +365,18 @@
 	outline-offset: -6%;
 	border-radius: 28px;
 }
+
+/* a wide screen: the sections in two columns, the team across both */
+@container page (min-width: 1000px) {
+	.shop-body {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-auto-flow: row dense;
+		align-items: start;
+		gap: clamp(48px, 5vw, 72px) clamp(40px, 4vw, 72px);
+		max-width: none;
+	}
+	.shop-body > #equipe {
+		grid-column: 1 / -1;
+	}
+}

@@ -39,3 +39,31 @@
 	display: flex;
 	gap: 10px;
 }
+
+/* a wide screen: the settings side by side, the new-salon fields in columns */
+@container page (min-width: 1000px) {
+	.settings {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+		column-gap: 48px;
+		max-width: none;
+	}
+	.salon-new {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-auto-flow: row dense;
+		gap: 16px 24px;
+		max-width: none;
+	}
+	.salon-new-foot {
+		grid-column: 1 / -1;
+	}
+}
+@container page (min-width: 1400px) {
+	.salon-new {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.salon-new > .field:nth-of-type(3) {
+		grid-column: span 2;
+	}
+}

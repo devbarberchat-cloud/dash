@@ -312,11 +312,13 @@
 }
 
 /* the page, beside the sidebar. Its width is what the blocks inside adapt to. */
+/* On a wide screen the content grows with it (up to --max-wide) and sits
+   centred in the room beside the sidebar, so neither side is left empty. */
 .page {
 	container: page / inline-size;
+	--content: clamp(var(--max), 80vw, var(--max-wide));
 	margin-inline-start: var(--side);
-	max-width: calc(var(--max) + var(--side));
-	padding: clamp(32px, 4vw, 56px) clamp(20px, 3.5vw, 48px) clamp(64px, 8vw, 96px);
+	padding: clamp(32px, 4vw, 56px) max(clamp(20px, 3.5vw, 48px), calc((100vw - var(--side) - var(--content)) / 2)) clamp(64px, 8vw, 96px);
 	display: flex;
 	flex-direction: column;
 	gap: clamp(32px, 4vw, 56px);

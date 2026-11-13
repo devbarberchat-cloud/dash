@@ -57,6 +57,8 @@
 
 	--pad: max(clamp(20px, 4.5vw, 64px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
 	--max: 1280px;
+	/* how wide the content may grow on a large screen */
+	--max-wide: 1920px;
 
 	color-scheme: light;
 }
