@@ -1,10 +1,7 @@
-import { useRef } from 'react';
-import { ImageUp } from 'lucide-react';
 import { mediaUrl } from '@/api/http';
 import { useAgenda, useShop, useStaff, type ShopDetails } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
 import { int, score } from '@/lib/format';
-import { useObjectUrl } from '@/lib/useObjectUrl';
 import { Button } from '@/ui/Button';
 import { Failure } from '@/ui/controls';
 import { PageHeader } from '@/ui/PageHeader';
@@ -12,9 +9,6 @@ import { useToast } from '@/ui/Toast';
 import { AddressSection, HoursSection, ProfileSection, StatusSection, TeamSection } from './sections';
 import { useShopForm } from './useShopForm';
 import './Shop.css';
-
-const IMAGE = /^image\/(jpeg|png)$/;
-const MAX = 5 * 1024 * 1024;
 
 export function ShopPage() {
 	const current = useCurrentShop();
@@ -40,12 +34,6 @@ export function ShopPage() {
 	const f = { ...form, draft: form.draft, days: form.days };
 	const s = shop.data;
 
-	const pick = (key: 'logo' | 'cover_image', what: string) => (file: File) => {
-		if (!IMAGE.test(file.type)) return toast(`${what} doit être une image JPEG ou PNG`);
-		if (file.size > MAX) return toast(`${what} doit faire 5 Mo au plus`);
-		form.set(key, file);
-	};
-
 	const onSave = async () => {
 		try {
 			const bad = await form.save();
@@ -65,7 +53,7 @@ export function ShopPage() {
 		<>
 			<PageHeader kicker="Votre salon" title={s.name} place={[s.address, s.neighborhood, s.city].filter(Boolean).join(', ')} />
 
-			<Cover shop={s} cover={f.draft.cover_image} onCover={pick('cover_image', 'La photo')} />
+			<Cover shop={s} />
 
 			<ul className="facts shop-facts" aria-label="Le salon en bref">
 				<li className={`fact ${s.status === 'inactive' ? '' : 'fact--good'}`}>
@@ -85,8 +73,8 @@ export function ShopPage() {
 			</ul>
 
 			<div className="shop-body">
-				<ProfileSection id="infos" form={f} />
-				<AddressSection id="adresse" form={f} />
+				<ProfileSection id="infos" form={f} shop={s} />
+				<AddressSection id="adresse" shop={s} />
 				<HoursSection id="horaires" form={f} />
 				<TeamSection id="equipe" staff={staff.data} loading={staff.isPending} />
 				<StatusSection id="statut" shop={s} />
@@ -98,22 +86,11 @@ export function ShopPage() {
 }
 
 /** The salon page's cover, still, its corners as the site's. */
-function Cover({ shop, cover, onCover }: { shop: ShopDetails; cover?: File; onCover: (f: File) => void }) {
-	const coverInput = useRef<HTMLInputElement>(null);
-	const coverUrl = useObjectUrl(cover) ?? mediaUrl(shop.cover_image);
-	const take = (fn: (f: File) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		e.target.value = '';
-		if (file) fn(file);
-	};
+function Cover({ shop }: { shop: ShopDetails }) {
+	const coverUrl = mediaUrl(shop.cover_image);
 	return (
 		<div className="cover">
 			{coverUrl ? <img src={coverUrl} alt={`Photo de ${shop.name}`} /> : <span className="cover-empty">Pas encore de photo</span>}
-			<button type="button" className="cover-change" onClick={() => coverInput.current?.click()}>
-				<ImageUp aria-hidden />
-				{coverUrl ? 'Changer la photo' : 'Ajouter une photo'}
-			</button>
-			<input ref={coverInput} type="file" accept="image/jpeg,image/png" hidden onChange={take(onCover)} />
 		</div>
 	);
 }

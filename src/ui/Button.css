@@ -70,6 +70,13 @@
 .btn--ink:hover:not(:disabled) {
 	background: var(--indigo);
 }
+.btn--mauve {
+	background: var(--mauve);
+	color: #fff;
+}
+.btn--mauve:hover:not(:disabled) {
+	background: #43086d;
+}
 .btn--outline {
 	background: transparent;
 	color: var(--ink);

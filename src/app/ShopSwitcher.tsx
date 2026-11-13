@@ -32,7 +32,6 @@ export function ShopSwitcher({ compact }: { compact?: boolean }) {
 				<ShopMark shop={shop} />
 				<span className="shop-name">
 					<b>{shop.name}</b>
-					<span>{shopKind(shop)}</span>
 				</span>
 				<ChevronsUpDown aria-hidden className="shop-chev" />
 			</button>

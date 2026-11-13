@@ -1,14 +1,13 @@
-import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { Lock, Plus } from 'lucide-react';
 import { mediaUrl } from '@/api/http';
 import { useToggleShopStatus, type ShopDetails, type StaffMember } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
 import { hhmm, monthYearShort, toMinutes } from '@/lib/format';
-import { NEIGHBORHOODS, SHOP_TYPES } from '@/lib/neighborhoods';
+import { neighborhoodCode, neighborhoodLabel, SHOP_TYPES } from '@/lib/neighborhoods';
 import { Button } from '@/ui/Button';
-import { ChipGroup, Switch } from '@/ui/controls';
 import { Dialog } from '@/ui/Dialog';
-import { Field, Input, Select, Textarea } from '@/ui/Field';
+import { Field, Input, Textarea } from '@/ui/Field';
 import { Portrait } from '@/ui/Portrait';
 import { useToast } from '@/ui/Toast';
 import { AddBarberDialog } from '../barbers/AddBarberDialog';
@@ -35,32 +34,38 @@ function Section({ id, title, text, action, children }: { id: string; title: str
 	);
 }
 
-/** A text field bound to the draft, with its error. */
-function TextField({ form, k, label, hint, ...rest }: { form: Form; k: keyof Draft; label: string; hint?: string } & Omit<InputHTMLAttributes<HTMLInputElement>, 'form'>) {
+/* informations */
+
+/** What only BarberChat changes: shown as it is, with the way to ask for a change. */
+const LOCKED = 'Pour modifier ces informations, contactez l’équipe BarberChat.';
+
+function Locked({ rows }: { rows: [string, ReactNode][] }) {
 	return (
-		<div data-field={k}>
-			<Field label={label} hint={hint} error={form.errors[k]}>
-				{({ id, describedBy, invalid }) => (
-					<Input id={id} value={String(form.draft[k] ?? '')} onChange={(e) => form.set(k, e.target.value as never)} aria-describedby={describedBy} aria-invalid={invalid} {...rest} />
-				)}
-			</Field>
-		</div>
+		<>
+			<dl className='pairs locked'>
+				{rows.map(([name, value]) => (
+					<div key={name}>
+						<dt>{name}</dt>
+						<dd>{value || <span className='muted'>—</span>}</dd>
+					</div>
+				))}
+			</dl>
+			<p className='locked-note'>
+				<Lock aria-hidden />
+				{LOCKED}
+			</p>
+		</>
 	);
 }
 
-/* informations */
-
-export function ProfileSection({ id, form }: { id: string; form: Form }) {
+export function ProfileSection({ id, form, shop }: { id: string; form: Form; shop: ShopDetails }) {
 	const left = DESCRIPTION_MAX - form.draft.description.length;
 	return (
-		<Section id={id} title="Informations" text="Ce que les clients voient sur la page du salon, dans l’app">
-			<div className="sgrid">
-				<div className="span-2">
-					<TextField form={form} k="name" label="Nom du salon" autoComplete="organization" />
-				</div>
-				<div className="span-2" data-field="description">
+		<Section id={id} title='Informations' text='Ce que les clients voient sur la page du salon, dans l’app'>
+			<div className='sgrid'>
+				<div className='span-2' data-field='description'>
 					<Field
-						label="Présentation"
+						label='Présentation'
 						error={form.errors.description}
 						hint={left >= 0 ? `${form.draft.description.length} / ${DESCRIPTION_MAX}` : `${-left} caractères de trop`}
 					>
@@ -68,7 +73,7 @@ export function ProfileSection({ id, form }: { id: string; form: Form }) {
 							<Textarea
 								id={id}
 								value={form.draft.description}
-								placeholder="Ce qui fait votre salon, en deux ou trois phrases."
+								placeholder='Ce qui fait votre salon, en deux ou trois phrases.'
 								onChange={(e) => form.set('description', e.target.value)}
 								aria-describedby={describedBy}
 								aria-invalid={invalid}
@@ -76,64 +81,43 @@ export function ProfileSection({ id, form }: { id: string; form: Form }) {
 						)}
 					</Field>
 				</div>
-				<div className="span-2 field">
-					<span className="field-label" id="range-l">
-						Gamme de prix
-					</span>
-					<ChipGroup label="Gamme de prix" options={SHOP_TYPES} value={form.draft.shop_type} onChange={(v) => form.set('shop_type', v)} />
-				</div>
-				<TextField form={form} k="phone" label="Téléphone" inputMode="tel" autoComplete="tel" placeholder="+212 6 12 34 56 78" />
-				<TextField form={form} k="email" label="E-mail" type="email" autoComplete="email" placeholder="contact@monsalon.ma" />
 			</div>
+			<Locked
+				rows={[
+					['Nom du salon', shop.name],
+					['Gamme de prix', SHOP_TYPES.find((type) => type.value === form.draft.shop_type)?.label ?? form.draft.shop_type],
+					['E-mail', shop.email]
+				]}
+			/>
 		</Section>
 	);
 }
 
 /* adresse */
 
-export function AddressSection({ id, form }: { id: string; form: Form }) {
-	const { latitude: lat, longitude: lng, google_maps_url: url } = form.draft;
-	const maps = url && !form.allErrors.google_maps_url ? url : lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : null;
+export function AddressSection({ id, shop }: { id: string; shop: ShopDetails }) {
+	const maps = shop.google_maps_url || (shop.latitude && shop.longitude ? `https://www.google.com/maps/search/?api=1&query=${shop.latitude},${shop.longitude}` : null);
 	return (
 		<Section
 			id={id}
-			title="Adresse"
-			text="Pour l’itinéraire et la recherche par quartier"
+			title='Adresse'
+			text='Pour l’itinéraire et la recherche par quartier'
 			action={
 				maps && (
-					<a href={maps} target="_blank" rel="noreferrer" className="text-btn">
+					<a href={maps} target='_blank' rel='noreferrer' className='text-btn'>
 						Voir sur la carte
 					</a>
 				)
 			}
 		>
-			<div className="sgrid">
-				<div className="span-2">
-					<TextField form={form} k="address" label="Rue et numéro" autoComplete="street-address" />
-				</div>
-				<div data-field="neighborhood">
-					<Field label="Quartier">
-						{({ id }) => (
-							<Select id={id} value={form.draft.neighborhood} onChange={(e) => form.set('neighborhood', e.target.value)}>
-								{NEIGHBORHOODS.map(([k, l]) => (
-									<option key={k} value={k}>
-										{l}
-									</option>
-								))}
-							</Select>
-						)}
-					</Field>
-				</div>
-				<TextField form={form} k="postal_code" label="Code postal" inputMode="numeric" autoComplete="postal-code" />
-				<div className="span-2">
-					<TextField form={form} k="city" label="Ville" autoComplete="address-level2" />
-				</div>
-				<div className="span-2">
-					<TextField form={form} k="google_maps_url" label="Lien Google Maps" placeholder="https://maps.google.com/…" hint="Facultatif" />
-				</div>
-				<TextField form={form} k="latitude" label="Latitude" inputMode="decimal" />
-				<TextField form={form} k="longitude" label="Longitude" inputMode="decimal" />
-			</div>
+			<Locked
+				rows={[
+					['Rue et numéro', shop.address],
+					['Quartier', neighborhoodLabel(neighborhoodCode(shop.neighborhood)) || shop.neighborhood],
+					['Code postal', shop.postal_code],
+					['Ville', shop.city]
+				]}
+			/>
 		</Section>
 	);
 }
@@ -141,75 +125,19 @@ export function AddressSection({ id, form }: { id: string; form: Form }) {
 /* horaires */
 
 const DAY = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-// on the quarter hour, 24-hour times, the same on every phone and browser
-const QUARTERS = Array.from({ length: 4 * 18 }, (_, i) => 6 * 60 + i * 15).map((m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
-
-function TimeSelect({ label, value, invalid, describedBy, onChange }: { label: string; value: string; invalid: boolean; describedBy?: string; onChange: (v: string) => void }) {
-	const v = hhmm(value);
-	const options = QUARTERS.includes(v) ? QUARTERS : [v, ...QUARTERS];
-	return (
-		<Select aria-label={label} value={v} aria-invalid={invalid} aria-describedby={describedBy} onChange={(e) => onChange(`${e.target.value}:00`)} className="num">
-			{options.map((t) => (
-				<option key={t} value={t}>
-					{t}
-				</option>
-			))}
-		</Select>
-	);
-}
 
 export function HoursSection({ id, form }: { id: string; form: Form }) {
-	const toast = useToast();
 	const today = (new Date().getDay() + 6) % 7;
 	const open = form.days.filter((d) => !d.is_closed);
 	const total = open.reduce((s, d) => s + Math.max(0, toMinutes(d.closing_time) - toMinutes(d.opening_time)), 0) / 60;
-	const copyMonday = () => {
-		const mon = form.days.find((d) => d.weekday === 0);
-		if (!mon) return;
-		form.setDays((ds) => ds && ds.map((d) => (d.weekday >= 1 && d.weekday <= 5 ? { ...d, opening_time: mon.opening_time, closing_time: mon.closing_time, is_closed: mon.is_closed } : d)));
-		toast('Horaires du lundi copiés du mardi au samedi');
-	};
 	return (
-		<Section
-			id={id}
-			title="Horaires"
-			text={`${open.length} jours sur 7, ${String(Number(total.toFixed(1))).replace('.', ',')} h par semaine`}
-			action={
-				<button type="button" className="text-btn" onClick={copyMonday}>
-					Copier le lundi sur la semaine
-				</button>
-			}
-		>
-			<ul className="list hours">
-				{form.days.map((d) => {
-					const err = form.errors[`day${d.weekday}`];
-					return (
-						<li key={d.weekday} className={d.is_closed ? 'is-closed' : ''}>
-							<label className="hours-day" htmlFor={`day-${d.weekday}`}>
-								{DAY[d.weekday]}
-								{d.weekday === today && <small>aujourd’hui</small>}
-							</label>
-							<div className="hours-times">
-								{d.is_closed ? (
-									<span className="muted">Fermé</span>
-								) : (
-									<>
-										<TimeSelect label={`${DAY[d.weekday]}, ouverture`} value={d.opening_time} invalid={Boolean(err)} describedBy={err ? `err-day-${d.weekday}` : undefined} onChange={(v) => form.setDay(d.weekday, { opening_time: v })} />
-										<span aria-hidden>–</span>
-										<TimeSelect label={`${DAY[d.weekday]}, fermeture`} value={d.closing_time} invalid={Boolean(err)} describedBy={err ? `err-day-${d.weekday}` : undefined} onChange={(v) => form.setDay(d.weekday, { closing_time: v })} />
-									</>
-								)}
-							</div>
-							<Switch id={`day-${d.weekday}`} checked={!d.is_closed} onChange={(v) => form.setDay(d.weekday, { is_closed: !v })} label={`Ouvert le ${DAY[d.weekday]?.toLowerCase()}`} />
-							{err && (
-								<p id={`err-day-${d.weekday}`} className="field-error hours-err" role="alert">
-									{err}
-								</p>
-							)}
-						</li>
-					);
-				})}
-			</ul>
+		<Section id={id} title='Horaires' text={`${open.length} jours sur 7, ${String(Number(total.toFixed(1))).replace('.', ',')} h par semaine`}>
+			<Locked
+				rows={form.days.map((d) => [
+					d.weekday === today ? `${DAY[d.weekday]} (aujourd’hui)` : (DAY[d.weekday] ?? ''),
+					d.is_closed ? 'Fermé' : <span className='num'>{hhmm(d.opening_time)} – {hhmm(d.closing_time)}</span>
+				])}
+			/>
 		</Section>
 	);
 }

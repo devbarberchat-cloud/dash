@@ -21,11 +21,32 @@
 	letter-spacing: -0.03em;
 	text-wrap: balance;
 }
+/* a picture before the title, as tall as its capitals and a little more */
+.phead-title--mark {
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
+}
+.phead-mark {
+	display: flex;
+	flex: none;
+}
+.phead-mark .shop-mark {
+	height: 1.5em;
+	font-size: inherit;
+}
 .phead-kicker + .phead-title {
 	margin-top: 10px;
 }
 .phead-text > .phead-title:first-child {
 	margin-top: 0;
+}
+.phead-desc {
+	max-width: 62ch;
+	margin-top: 12px;
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--muted);
 }
 .phead-place {
 	display: flex;

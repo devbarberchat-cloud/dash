@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import './Button.css';
 
-type Variant = 'ink' | 'outline' | 'quiet' | 'danger' | 'white';
+type Variant = 'ink' | 'mauve' | 'outline' | 'quiet' | 'danger' | 'white';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 	variant?: Variant;

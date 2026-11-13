@@ -6,7 +6,8 @@ import { useRemoveBarber } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
 import { StatusBar } from '@/charts/StatusBar';
 import { statusColor, statusLabel } from '@/lib/booking-status';
-import { mad, minutes, monthYear, pct, score } from '@/lib/format';
+import { mad, minutes, monthYear, pct } from '@/lib/format';
+import { BarberScore } from '@/ui/BarberScore';
 import { Button } from '@/ui/Button';
 import { Dialog } from '@/ui/Dialog';
 import { Portrait } from '@/ui/Portrait';
@@ -55,9 +56,11 @@ export function BarberSheet({ barber, name, shopName, onClose }: { barber: Barbe
 								<dd className="kpi-note num">Durée moyenne {minutes(b.average_service_time)}</dd>
 							</div>
 							<div>
-								<dt>Score</dt>
-								<dd className="num">{score(b.barber_score)}</dd>
-								<dd className="kpi-note">Le score BarberChat</dd>
+								<dt>BarberScore</dt>
+								<dd>
+									<BarberScore value={b.barber_score} />
+								</dd>
+								<dd className="kpi-note">Offert par les clients après chaque prestation</dd>
 							</div>
 						</dl>
 						<section aria-labelledby="outcome-t">

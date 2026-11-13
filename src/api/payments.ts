@@ -23,6 +23,8 @@ export interface PaymentPeriod {
 
 export interface PeriodDetails extends PaymentPeriod {
 	payment_records: { id: number; booking_date: string; client_name: string; barber_name: string; booking_amount: string; commission_amount: string }[];
+	/** The proof of payment the salon sent, while BarberChat checks it. */
+	proof?: { file_name: string; uploaded_at: string; notes: string } | null;
 }
 
 export interface PaymentStats {
@@ -31,6 +33,7 @@ export interface PaymentStats {
 	total_overdue: string;
 	pending_review_count: number;
 	overdue_count: number;
+	paid_count?: number;
 }
 
 export interface PeriodsQuery {
@@ -75,3 +78,5 @@ export function useUploadProof(shop: number) {
 
 export const invoicePath = (shop: number, period: number) => `${base(shop)}/periods/${period}/invoice/`;
 export const barberReportPath = (shop: number, period: number) => `${base(shop)}/periods/${period}/barber-report/`;
+/** The file sent as proof of payment. */
+export const proofPath = (shop: number, period: number) => `${base(shop)}/periods/${period}/proof/`;

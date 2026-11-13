@@ -12,7 +12,7 @@ import { t } from '@/i18n';
 import { toBookingStatus } from '@/lib/booking-status';
 import { dateShort, mad, pct, personName, signedPct } from '@/lib/format';
 import { Failure, Loading } from '@/ui/controls';
-import { Avatar } from '@/ui/Portrait';
+import { Portrait } from '@/ui/Portrait';
 
 type Point = DashboardData['revenueChart'][number];
 const sum = (points: Point[]) => points.reduce((total, point) => total + point.value, 0);
@@ -161,7 +161,7 @@ function Leaderboard({ bookings }: { bookings: Booking[] }) {
 				<li key={row.id} className="board-row">
 					<span className="board-rank num" aria-hidden="true">{i + 1}</span>
 					<Link to={`/barbiers/${row.id}`} className="board-who">
-						<Avatar name={row.name} src={mediaUrl(row.picture)} size={36} />
+						<Portrait name={row.name} src={mediaUrl(row.picture)} size={28} className="board-face" />
 						<span>
 							<b>{row.name}</b>
 							<small className="num">{t('home.servicesDone', { count: row.completed })}</small>
@@ -174,6 +174,7 @@ function Leaderboard({ bookings }: { bookings: Booking[] }) {
 						<b>{mad(Math.round(row.revenue))}</b>
 						<small>{totalRevenue ? pct((row.revenue / totalRevenue) * 100) : ' '}</small>
 					</span>
+					{totalRevenue > 0 && <ShareRing share={row.revenue / totalRevenue} />}
 				</li>
 			))}
 			<li className="board-row board-row--total">
@@ -190,5 +191,22 @@ function Leaderboard({ bookings }: { bookings: Booking[] }) {
 				</span>
 			</li>
 		</ol>
+	);
+}
+
+/** A barber's share of the salon's revenue as a ring, with the figure inside: what the bar says, sized for a phone held upright. */
+function ShareRing({ share }: { share: number }) {
+	const value = Math.max(0, Math.min(1, share)) * 100;
+	return (
+		<span className="board-ring" role="img" aria-label={pct(value)}>
+			<svg viewBox="0 0 44 44" aria-hidden="true">
+				<circle cx="22" cy="22" r="19" className="board-ring-track" />
+				<circle cx="22" cy="22" r="19" className="board-ring-arc" pathLength={100} strokeDasharray={`${value} 100`} transform="rotate(-90 22 22)" />
+			</svg>
+			<span className="num" aria-hidden="true">
+				{Math.round(value)}
+				<small>%</small>
+			</span>
+		</span>
 	);
 }

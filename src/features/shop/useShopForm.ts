@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SHOP_TYPES, useSaveAgenda, useUpdateShop, type AgendaDay, type ShopDetails, type ShopFields, type ShopType } from '@/api/shops';
 import { neighborhoodCode } from '@/lib/neighborhoods';
-import { toMinutes } from '@/lib/format';
 
 export type Draft = Required<Omit<ShopFields, 'logo' | 'cover_image'>> & { logo?: File; cover_image?: File };
 export type Errors = Partial<Record<keyof Draft | `day${number}`, string>>;
@@ -29,18 +28,10 @@ const fromShop = (s: ShopDetails): Draft => ({
 	email: s.email ?? ''
 });
 
-export function validate(d: Draft, days: AgendaDay[]): Errors {
+/** Only the presentation is the salon's to change; the rest is locked and shown as it is. */
+export function validate(d: Draft): Errors {
 	const e: Errors = {};
-	if (!d.name.trim()) e.name = 'Donnez un nom au salon : c’est ce que voient les clients dans l’app.';
 	if (d.description.length > DESCRIPTION_MAX) e.description = `${DESCRIPTION_MAX} caractères au plus.`;
-	if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) e.email = 'Cette adresse semble incomplète, par exemple bonjour@monsalon.ma.';
-	if (d.phone && !/^\+?[\d\s]{9,17}$/.test(d.phone)) e.phone = 'Des chiffres seulement, par exemple +212 6 12 34 56 78.';
-	if (d.google_maps_url && !/^https?:\/\/\S+$/.test(d.google_maps_url)) e.google_maps_url = 'Collez le lien complet, qui commence par https://';
-	if (d.latitude && (Number.isNaN(Number(d.latitude)) || Math.abs(Number(d.latitude)) > 90)) e.latitude = 'Un nombre entre −90 et 90.';
-	if (d.longitude && (Number.isNaN(Number(d.longitude)) || Math.abs(Number(d.longitude)) > 180)) e.longitude = 'Un nombre entre −180 et 180.';
-	for (const day of days) {
-		if (!day.is_closed && toMinutes(day.closing_time) <= toMinutes(day.opening_time)) e[`day${day.weekday}`] = 'La fermeture doit venir après l’ouverture.';
-	}
 	return e;
 }
 
@@ -76,7 +67,7 @@ export function useShopForm(shop: ShopDetails | undefined, agenda: AgendaDay[] |
 		[days, agenda]
 	);
 
-	const errors = draft && days ? validate(draft, days) : {};
+	const errors = draft && days ? validate(draft) : {};
 	const dirty = Object.keys(changedFields).length > 0 || changedDays.length > 0;
 
 	return {

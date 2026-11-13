@@ -6,7 +6,7 @@ import { useBookingAction, useFreeSlots, useLiveBookings, type Booking, type Boo
 import { useCurrentShop } from '@/app/shop-context';
 import { t, type MessageKey } from '@/i18n';
 import { toBookingStatus } from '@/lib/booking-status';
-import { capitalize, duration, int, mad, time, weekdayDate } from '@/lib/format';
+import { capitalize, duration, mad, time, weekdayDate } from '@/lib/format';
 import { Button } from '@/ui/Button';
 import { ChipGroup, Failure, Loading } from '@/ui/controls';
 import { Dialog } from '@/ui/Dialog';
@@ -81,7 +81,6 @@ export function BookingsPage() {
 	const scheduleRows = filterRows(scheduleTab);
 	const waiting = listOf('pending').length;
 	const activeTotal = waiting + listOf('reschedule').length;
-	const late = data.in_progress_bookings.filter((booking) => (booking.remaining_time_seconds ?? 0) < 0).length;
 
 	return (
 		<>
@@ -105,31 +104,6 @@ export function BookingsPage() {
 					{t('live.staleError', { time: time(new Date(dataUpdatedAt)) })}
 				</p>
 			)}
-			{!canAct && <p className="notice">{t('live.readOnly')}</p>}
-			{late > 0 && (
-				<p className="notice notice--warn" role="status">
-					{t('live.overtime', { count: late })}
-				</p>
-			)}
-
-			<dl className="figures">
-				<div>
-					<dt>{t('live.statPending')}</dt>
-					<dd>{int(waiting)}</dd>
-				</div>
-				<div>
-					<dt>{t('live.statInProgress')}</dt>
-					<dd>{int(data.stats.in_progress_count)}</dd>
-				</div>
-				<div>
-					<dt>{t('live.statToday')}</dt>
-					<dd>{int(data.stats.today_count)}</dd>
-				</div>
-				<div>
-					<dt>{t('live.statUpcoming')}</dt>
-					<dd>{int(data.stats.total_upcoming)}</dd>
-				</div>
-			</dl>
 
 			<div className="toolbar">
 				<SearchInput value={search} onChange={setSearch} label={t('live.searchPlaceholder')} />
@@ -334,6 +308,15 @@ export function ActionDialog({ acting, onClose }: { acting: { booking: Booking; 
 	);
 }
 
+/** The free slots, day by day, in the order the API gives them. */
+function slotDays<T extends { start_time: string }>(slots: T[]): [string, T[]][] {
+	const days = new Map<string, T[]>();
+	for (const slot of slots) {
+		const date = slot.start_time.slice(0, 10);
+		days.set(date, [...(days.get(date) ?? []), slot]);
+	}
+	return [...days];
+}
 /** Offer the client up to three of the barber's free slots. */
 export function SlotsDialog({ booking, onClose }: { booking: Booking | null; onClose: () => void }) {
 	const shop = useCurrentShop();
@@ -360,6 +343,7 @@ export function SlotsDialog({ booking, onClose }: { booking: Booking | null; onC
 					<span className="muted bk-picked">{t('live.slots.selected', { count: picked.length })}</span>
 					<Button
 						dot={false}
+						variant="mauve"
 						disabled={!picked.length}
 						loading={act.isPending}
 						onClick={() =>
@@ -389,27 +373,35 @@ export function SlotsDialog({ booking, onClose }: { booking: Booking | null; onC
 			) : slots.data.length === 0 ? (
 				<p className="muted">{t('live.slots.none', names)}</p>
 			) : (
-				<ul className="slots">
-					{slots.data.map((slot) => {
-						const on = picked.includes(slot.start_time);
-						return (
-							<li key={slot.start_time}>
-								<label className="slot">
-									<input
-										type="checkbox"
-										checked={on}
-										disabled={!on && picked.length >= 3}
-										onChange={() => setPicked((list) => (on ? list.filter((value) => value !== slot.start_time) : [...list, slot.start_time]))}
-									/>
-									<span>
-										{capitalize(weekdayDate(slot.start_time.slice(0, 10)))}, {time(slot.start_time.slice(11))}
-										{slot.end_time && ` – ${time(slot.end_time.slice(11))}`}
-									</span>
-								</label>
-							</li>
-						);
-					})}
-				</ul>
+				<div className="slot-days">
+					{slotDays(slots.data).map(([date, list]) => (
+						<section key={date} className="slot-day" aria-label={capitalize(weekdayDate(date))}>
+							<h3>{capitalize(weekdayDate(date))}</h3>
+							<ul className="slot-list">
+								{list.map((slot) => {
+									const on = picked.includes(slot.start_time);
+									const off = !on && picked.length >= 3;
+									return (
+										<li key={slot.start_time}>
+											<label className={`slot-row${on ? ' is-on' : ''}${off ? ' is-off' : ''}`}>
+												<input
+													type="checkbox"
+													checked={on}
+													disabled={off}
+													onChange={() => setPicked((list) => (on ? list.filter((value) => value !== slot.start_time) : [...list, slot.start_time]))}
+												/>
+												<span className="slot-time num">
+													<b>{time(slot.start_time.slice(11))}</b>
+													{slot.end_time && <span> – {time(slot.end_time.slice(11))}</span>}
+												</span>
+											</label>
+										</li>
+									);
+								})}
+							</ul>
+						</section>
+					))}
+				</div>
 			)}
 			{act.isError && (
 				<p className="notice notice--bad" role="alert">

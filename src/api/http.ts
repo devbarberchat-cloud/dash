@@ -133,6 +133,11 @@ export async function request<T>(path: string, options?: RequestOptions): Promis
 	return (text ? JSON.parse(text) : undefined) as T;
 }
 
+/** A file from the API, to show on the page. Throws ApiError when the answer is not 2xx. */
+export async function fileBlob(path: string, options?: RequestOptions): Promise<Blob> {
+	return (await send(path, options)).blob();
+}
+
 /** Fetches a file from the API and saves it under its own name. */
 export async function download(path: string, fallbackName: string, options?: RequestOptions) {
 	const res = await send(path, options);

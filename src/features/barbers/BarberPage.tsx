@@ -8,7 +8,8 @@ import { useCurrentShop } from '@/app/shop-context';
 import { StatusBar } from '@/charts/StatusBar';
 import { t, tMaybe } from '@/i18n';
 import { statusParts } from '@/lib/booking-status';
-import { date, daysAgo, decimal, int, mad, minutes, pct, personName, score, today } from '@/lib/format';
+import { date, daysAgo, decimal, int, mad, minutes, pct, personName, today } from '@/lib/format';
+import { BarberScore } from '@/ui/BarberScore';
 import { ChipGroup, Failure, Loading } from '@/ui/controls';
 import { PageHeader } from '@/ui/PageHeader';
 import { Portrait } from '@/ui/Portrait';
@@ -162,7 +163,10 @@ function Figures({ data }: { data: BarberAnalytics }) {
 			</div>
 			<div>
 				<dt>{t('barberDetail.score')}</dt>
-				<dd>{data.total_bookings ? score(data.barber_score) : '—'}</dd>
+				<dd>
+					<BarberScore value={data.barber_score} />
+				</dd>
+				<dd className="figure-note">{t('barberDetail.scoreNote')}</dd>
 			</div>
 			<div>
 				<dt>{t('barberDetail.serviceTime')}</dt>
@@ -234,9 +238,8 @@ function ScoreHistory({ history }: { history: NonNullable<BarberAnalytics['barbe
 								{change.action_name}
 								<small className="num">{date(change.created_at)}</small>
 							</dt>
-							<dd className={`num ${change.points_awarded < 0 ? 'is-down' : 'is-up'}`}>
-								{change.points_awarded > 0 ? '+' : ''}
-								{decimal(change.points_awarded, 2)}
+							<dd>
+								<BarberScore value={change.points_awarded} signed />
 							</dd>
 						</div>
 					))}

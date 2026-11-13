@@ -178,17 +178,46 @@ export function registerPayments(router, state) {
 				throw badRequest({ proof_file: ['Upload a JPEG, PNG or PDF file.'] });
 			if (file.data.length > 5 * 1024 * 1024)
 				throw badRequest({ proof_file: ['The file must be 5 MB or less.'] });
+			// a proof still under review can be replaced; a paid week is closed
 			const st = serialize(p).status;
-			if (!['PENDING', 'OVERDUE'].includes(st))
-				throw badRequest({ detail: 'Proof can only be uploaded for pending or overdue periods.' });
+			if (!['PENDING', 'OVERDUE', 'PENDING_REVIEW'].includes(st))
+				throw badRequest({ detail: 'Proof can only be uploaded for unpaid periods.' });
 			p.proof = {
 				filename: file.filename,
+				contentType: file.contentType,
+				data: file.data,
 				uploaded_at: new Date().toISOString(),
 				notes: body.notes || ''
 			};
 			p.status = 'PENDING_REVIEW';
 			p.updated_at = new Date().toISOString();
 			return serialize(p);
+		}
+	);
+
+	// the file sent as proof, as it was uploaded; a seeded week gets a one-page receipt
+	router.add(
+		'GET',
+		'/api/auth/dashboard-payments/shops/:shopId/periods/:periodId/proof/',
+		({ params }) => {
+			const shop = state.shop(params.shopId);
+			const p = findPeriod(shop.id, params.periodId);
+			if (!p.proof) throw new HttpError(404, { detail: 'No proof for this period.' });
+			const s = serialize(p);
+			return {
+				__raw: true,
+				status: 200,
+				body:
+					p.proof.data ??
+					pdf([
+						'Bank transfer receipt',
+						`From: ${shop.name}`,
+						'To: BarberChat',
+						`Period: ${s.period_display}`,
+						`Amount: ${s.total_commission} MAD`
+					]),
+				headers: { 'Content-Type': p.proof.data ? p.proof.contentType : 'application/pdf' }
+			};
 		}
 	);
 

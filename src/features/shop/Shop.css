@@ -326,3 +326,25 @@
 		translate: -50% 12px;
 	}
 }
+
+/* what only BarberChat changes: read as facts, with the way to ask */
+.pairs.locked dd {
+	font-family: var(--font-body);
+	font-weight: 500;
+}
+.ssec .sgrid + .pairs.locked {
+	margin-top: 18px;
+}
+.locked-note {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 12px;
+	font-size: 13.5px;
+	color: var(--muted);
+}
+.locked-note svg {
+	flex: none;
+	width: 15px;
+	height: 15px;
+}

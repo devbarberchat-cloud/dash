@@ -86,25 +86,67 @@
 	font-size: 14px;
 }
 
-.slots {
+/* free slots to offer: day by day, one native checkbox per slot, the picked ones washed in mauve */
+.slot-days {
 	display: flex;
 	flex-direction: column;
+	gap: 18px;
 }
-.slot {
+.slot-day h3 {
+	margin-bottom: 8px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--muted);
+}
+.slot-list {
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	overflow: hidden;
+}
+.slot-list li + li {
+	border-top: 1px solid var(--line-soft);
+}
+.slot-row {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	min-height: 48px;
-	border-bottom: 1px solid var(--line-soft);
+	gap: 14px;
+	min-height: 52px;
+	padding-inline: 16px;
 	cursor: pointer;
+	transition: background 0.2s var(--ease);
 }
-.slots li:last-child .slot {
-	border-bottom: 0;
-}
-.slot input {
+.slot-row input {
+	flex: none;
 	width: 18px;
 	height: 18px;
-	accent-color: var(--ink);
+	margin: 0;
+	accent-color: var(--mauve);
+	cursor: inherit;
+}
+.slot-time {
+	font-size: 15px;
+	color: var(--muted);
+}
+.slot-time b {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 16px;
+	color: var(--ink);
+}
+.slot-row.is-on {
+	background: var(--mauve-wash);
+}
+.slot-row.is-on .slot-time b {
+	color: var(--mauve);
+}
+.slot-row.is-off {
+	opacity: 0.45;
+	cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+	.slot-row {
+		transition: none;
+	}
 }
 
 /* history: the filters fold under the search on narrow pages */

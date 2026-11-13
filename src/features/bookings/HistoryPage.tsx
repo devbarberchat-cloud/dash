@@ -159,9 +159,7 @@ function HistoryRow({ booking }: { booking: Booking }) {
 			<td className="dtable-lead">
 				<b className="num">
 					{capitalize(weekdayDate(booking.booking_date))}, {time(booking.start_time)}
-				</b>
-				<small className="num">{booking.booking_number}</small>
-			</td>
+				</b>			</td>
 			<td data-label={t('history.colClient')}>
 				{booking.client ? <Link to={`/clients/${booking.client.id}?nom=${encodeURIComponent(booking.client.full_name || booking.client.username)}`}>{booking.client.full_name || booking.client.username}</Link> : <span>{t('live.unknownClient')}</span>}
 			</td>

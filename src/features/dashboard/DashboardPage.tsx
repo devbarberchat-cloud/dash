@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useDashboard, type PeriodQuery } from '@/api/dashboard';
-import { useShop } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
+import { ShopMark } from '@/app/ShopSwitcher';
 import { t } from '@/i18n';
 import { capitalize, dateFull } from '@/lib/format';
 import { Failure, Loading } from '@/ui/controls';
@@ -18,16 +18,14 @@ import './Dashboard.css';
  */
 export function DashboardPage() {
 	const shop = useCurrentShop();
-	const { data: details } = useShop(shop.id);
 	const [period, setPeriod] = useState<PeriodQuery>({ period: 'last_7_days' });
 	const { data, isPending, isFetching, error, refetch } = useDashboard(shop.id, period);
-	const place = details ? [details.neighborhood, details.city].filter(Boolean).join(', ') : undefined;
 	const overdue = data ? data.alerts.overduePayments > 0 : false;
 	const waiting = data ? !overdue && data.alerts.pendingPayments > 0 : false;
 
 	return (
 		<>
-			<PageHeader kicker={capitalize(dateFull(new Date()))} title={shop.name} place={place} actions={<PresenceStrip />} />
+			<PageHeader kicker={capitalize(dateFull(new Date()))} title={shop.name} mark={<ShopMark shop={shop} />} actions={<PresenceStrip />} />
 
 			<div className="dash">
 				{data && (overdue || waiting) && (

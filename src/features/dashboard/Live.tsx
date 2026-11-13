@@ -70,6 +70,12 @@ function tasksOf(data: LiveBookings, now: number, fetchedAt: number): Task[] {
 
 const clientName = (booking: Booking) => booking.client?.full_name || booking.client?.username || t('live.unknownClient');
 const dayName = (date: string) => (date === today() ? t('home.today') : date === daysAgo(-1) ? t('home.tomorrow') : capitalize(weekdayDate(date)));
+/** When the booking ends: its start plus its length, as 14:05. */
+const endOf = (booking: Booking) => {
+	const [h = 0, m = 0] = time(booking.start_time).split(':').map(Number);
+	const total = h * 60 + m + Number(booking.total_duration_minutes || 0);
+	return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+};
 
 /** What needs the manager now: one booking in full, the others as a row of chips to pick from. */
 export function LiveRequests() {
@@ -90,6 +96,7 @@ export function LiveRequests() {
 	const tasks = tasksOf(data, now, dataUpdatedAt).filter((task) => !handled.includes(`${task.booking.id}:${task.kind}`));
 	const task: Task | null = tasks.find((item) => item.booking.id === picked) ?? tasks[0] ?? null;
 	const canAct = data.booking_management_mode === 'manager';
+	const rest = tasks.filter((item) => item !== task);
 
 	// accepting is one press: no second question, the next booking comes up
 	const acceptNow = (booking: Booking) =>
@@ -133,26 +140,45 @@ export function LiveRequests() {
 				<p className="act-none">{t('home.requestsEmpty')}</p>
 			)}
 
-			{tasks.length > 1 && (
-				<ol className="act-queue" aria-label={t('home.requests')}>
-					{tasks.map((item) => (
-						<li key={`${item.booking.id}:${item.kind}`}>
-							<button
-								type="button"
-								className={`act-mini${item === task ? ' is-current' : ''}`}
-								aria-current={item === task}
-								onClick={() => {
-									accept.reset();
-									setPicked(item.booking.id);
-								}}
-							>
-								<span className="act-mini-when num">{time(item.booking.start_time)}</span>
-								<span className="act-mini-who">{clientName(item.booking)}</span>
-								{item.left !== null && <Countdown seconds={item.left} size={18} className="act-mini-chrono" />}
-							</button>
-						</li>
-					))}
-				</ol>
+			{rest.length > 0 && (
+				<div className="act-next">
+					<p className="act-next-label">{t('home.queueNext')}</p>
+					<ol className="act-queue" aria-label={t('home.queueNext')}>
+						{rest.map((item) => (
+							<li key={`${item.booking.id}:${item.kind}`}>
+								<button
+									type="button"
+									className="act-mini"
+									onClick={() => {
+										accept.reset();
+										setPicked(item.booking.id);
+									}}
+								>
+									<span className="act-mini-row">
+										<span className="act-mini-range num">
+											<b>{time(item.booking.start_time)}</b>
+											<span>– {endOf(item.booking)}</span>
+										</span>
+										<b className="act-mini-price num">{mad(item.booking.final_price)}</b>
+									</span>
+									<span className="act-mini-who">{clientName(item.booking)}</span>
+									{item.left !== null ? (
+										<span className={`act-mini-timer${item.left <= URGENT_SECONDS ? ' is-bad' : ''}`} role="timer" aria-label={t('live.expiresIn', { time: clock(Math.max(0, item.left)) })}>
+											<span className="act-mini-track" aria-hidden="true">
+												<i style={{ width: `${Math.max(0, Math.min(1, item.left / REQUEST_WINDOW_SECONDS)) * 100}%` }} />
+											</span>
+											<span className="act-mini-left num" aria-hidden="true">
+												{clock(Math.max(0, item.left))}
+											</span>
+										</span>
+									) : (
+										<span className="act-mini-left is-bad">{t('home.kind.late')}</span>
+									)}
+								</button>
+							</li>
+						))}
+					</ol>
+				</div>
 			)}
 
 			<Link to="/reservations" className="act-queue-all">
@@ -163,25 +189,6 @@ export function LiveRequests() {
 			<ActionDialog acting={acting} onClose={() => setActing(null)} />
 			<SlotsDialog booking={offering} onClose={() => setOffering(null)} />
 		</section>
-	);
-}
-
-/** The time left to answer: a ring that empties over the ten minutes, and the minutes and seconds beside it. */
-function Countdown({ seconds, size, className, label }: { seconds: number; size: number; className: string; label?: boolean }) {
-	const left = Math.max(0, seconds);
-	const share = Math.min(1, left / REQUEST_WINDOW_SECONDS) * 100;
-	const r = size / 2 - 3;
-	const text = t('live.expiresIn', { time: clock(left) });
-	return (
-		<span className={`${className}${left <= URGENT_SECONDS ? ' is-bad' : ''}`} role="timer" aria-label={text}>
-			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-				<circle cx={size / 2} cy={size / 2} r={r} className="chrono-track" />
-				<circle cx={size / 2} cy={size / 2} r={r} className="chrono-arc" pathLength={100} strokeDasharray={`${share} 100`} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
-			</svg>
-			<span className="num" aria-hidden="true">
-				{label ? text : clock(left)}
-			</span>
-		</span>
 	);
 }
 
@@ -200,6 +207,7 @@ interface TaskCardProps {
 function TaskCard({ task, now, canAct, accepting, failure, onAccept, onAction, onOffer }: TaskCardProps) {
 	const { booking, kind, left } = task;
 	const label = t(kind === 'request' ? 'home.kind.request' : 'home.kind.late');
+	const urgent = left !== null && left <= URGENT_SECONDS;
 
 	return (
 		<article className="act-card" aria-label={`${label} : ${clientName(booking)}, ${dayName(booking.booking_date)} ${time(booking.start_time)}`}>
@@ -208,18 +216,26 @@ function TaskCard({ task, now, canAct, accepting, failure, onAccept, onAction, o
 					<i style={{ background: KIND_COLOR[kind] }} aria-hidden="true" />
 					{label}
 				</p>
-				{left !== null ? (
-					<Countdown seconds={left} size={28} className="act-chrono" label />
-				) : kind === 'late' ? (
-					<p className="act-pill is-bad">{t('home.lateBy', { time: duration(Math.floor(startDelay(booking, now) ?? 0)) })}</p>
-				) : null}
+				{kind === 'late' && <p className="act-left is-bad">{t('home.lateBy', { time: duration(Math.floor(startDelay(booking, now) ?? 0)) })}</p>}
+				{canAct && kind === 'request' && <MoreMenu label={t('live.actions')} items={[{ label: t('live.action.decline'), run: () => onAction('cancel') }]} />}
 			</div>
-
+			{left !== null && (
+				<div className={`act-timer${urgent ? ' is-bad' : ''}`} role="timer" aria-label={t('live.expiresIn', { time: clock(Math.max(0, left)) })}>
+					<span className="act-track" aria-hidden="true">
+						<i style={{ width: `${Math.max(0, Math.min(1, left / REQUEST_WINDOW_SECONDS)) * 100}%` }} />
+					</span>
+					<span className="act-left num" aria-hidden="true">
+						{clock(Math.max(0, left))}
+					</span>
+				</div>
+			)}
 			<div className="act-body">
 				<div className="act-info">
-					<p className="act-when">
-						<b className="num">{time(booking.start_time)}</b>
-						<span>{dayName(booking.booking_date)}</span>
+					<p className="act-day">{dayName(booking.booking_date)}</p>
+					<p className="act-when num">
+						<b>{time(booking.start_time)}</b>
+						<ArrowRight className="act-when-arrow" aria-hidden="true" />
+						<span>{endOf(booking)}</span>
 					</p>
 					<h3 className="act-client">{clientName(booking)}</h3>
 					<p className="act-services">{booking.services.map((service) => service.title).join(', ')}</p>
@@ -237,7 +253,6 @@ function TaskCard({ task, now, canAct, accepting, failure, onAccept, onAction, o
 							<dd className="num">{mad(booking.final_price)}</dd>
 						</div>
 					</dl>
-					{booking.client_notes && <p className="act-note">« {booking.client_notes} »</p>}
 				</div>
 
 				{canAct ? (
@@ -251,9 +266,6 @@ function TaskCard({ task, now, canAct, accepting, failure, onAccept, onAction, o
 									<Button variant="outline" dot={false} onClick={onOffer}>
 										{t('live.action.offerTimes')}
 									</Button>
-								</div>
-								<div className="act-more">
-									<MoreMenu label={t('live.actions')} items={[{ label: t('live.action.decline'), run: () => onAction('cancel') }]} />
 								</div>
 							</>
 						) : (
@@ -302,10 +314,27 @@ const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
  * that fills with the share of the team present, and each barber as a name tag.
  * A tag opens that barber's week.
  */
+const HELP_KEY = 'bc.presence-help-closed';
+
 export function PresenceStrip() {
 	const shop = useCurrentShop();
 	const { data } = usePresence(shop.id);
 	const [open, setOpen] = useState<PresenceNow | null>(null);
+	const [help, setHelp] = useState(() => {
+		try {
+			return localStorage.getItem(HELP_KEY) !== '1';
+		} catch {
+			return true;
+		}
+	});
+	const closeHelp = () => {
+		setHelp(false);
+		try {
+			localStorage.setItem(HELP_KEY, '1');
+		} catch {
+			/* the note simply shows again next time */
+		}
+	};
 	if (!data || data.barbers.length === 0) return null;
 
 	const present = data.barbers.filter((barber) => barber.is_present);
@@ -327,13 +356,22 @@ export function PresenceStrip() {
 					<li key={barber.id}>
 						<button type="button" className={`hud-who${barber.is_present ? ' is-in' : ''}`} aria-label={`${barber.full_name}, ${stateText(barber)}`} onClick={() => setOpen(barber)}>
 							<span className="hud-face">
-								<Avatar name={barber.full_name} src={mediaUrl(barber.profile_picture)} size={22} />
+								<Avatar name={barber.full_name} src={mediaUrl(barber.profile_picture)} size={22} round />
 							</span>
 							<span className="hud-name">{firstName(barber.full_name)}</span>
 						</button>
 					</li>
 				))}
 			</ul>
+			{help && (
+				<div className="hud-help" role="note">
+					<button type="button" className="hud-help-close" aria-label={t('common.buttons.close')} onClick={closeHelp}>
+						<X aria-hidden />
+					</button>
+					<p className="hud-help-title">{t('home.presenceHelpTitle')}</p>
+					<p>{t('home.presenceHelp')}</p>
+				</div>
+			)}
 			<PresenceDialog barber={open} onClose={() => setOpen(null)} />
 		</div>
 	);

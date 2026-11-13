@@ -171,15 +171,22 @@
 	font-weight: 600;
 	font-size: 12px;
 }
+/* the salon's logo in its own frame: upright 64 × 90, as on the salon page, never cut */
 .shop-mark {
-	border-radius: 12px;
-	background: var(--ink);
+	width: auto;
+	height: 40px;
+	aspect-ratio: 64 / 90;
+	border-radius: 18% / 12.8%;
+	position: relative;
+	background: #101010;
 	color: #fff;
 }
 .shop-mark img {
+	position: absolute;
+	inset: 0;
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
+	object-fit: contain;
 }
 .account-mark {
 	border-radius: 50%;

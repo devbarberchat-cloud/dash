@@ -9,6 +9,10 @@ const r1 = (n) => Math.round(n * 10) / 10;
 export function registerBarbers(router, state) {
 	const { data } = state;
 
+	// BarberScore: points a client may gift the barber after a completed service
+	// (as many as they choose, no money value; about two in three gift some here)
+	const tipOf = (b) => (b.status === 'completed' && (b.id * 7) % 3 !== 0 ? 10 + ((b.id * 37) % 9) * 5 : 0);
+
 	const stats = (barber, list) => {
 		const total = list.length;
 		const by = (s) => list.filter((b) => b.status === s).length;
@@ -16,7 +20,6 @@ export function registerBarbers(router, state) {
 		const revenue = completed.reduce((s, b) => s + b.price, 0);
 		const original = completed.reduce((s, b) => s + b.original_price, 0);
 		const minutes = completed.reduce((s, b) => s + b.duration, 0);
-		const rated = completed.filter((b) => b.rating);
 		const dates = list.map((b) => b.date).sort();
 		const pct = (n) => (total ? r1((n / total) * 100) : 0);
 		return {
@@ -29,7 +32,7 @@ export function registerBarbers(router, state) {
 			revenue,
 			original,
 			minutes,
-			score: rated.length ? r1(rated.reduce((s, b) => s + b.rating, 0) / rated.length) : 0,
+			score: completed.reduce((s, b) => s + tipOf(b), 0),
 			pct,
 			first: dates[0] || null,
 			last: dates[dates.length - 1] || null
@@ -130,23 +133,25 @@ export function registerBarbers(router, state) {
 				])
 			);
 
-			const history = [];
-			let score = 4.2;
-			for (let i = 8; i >= 1; i--) {
-				const delta = [0.1, -0.2, 0.15, 0.05, -0.1, 0.2, 0.1, 0.05][i % 8];
-				const prev = score;
-				score = Math.max(0, Math.min(5, Math.round((score + delta) * 100) / 100));
-				history.push({
-					id: barber.id * 100 + i,
-					action_name: delta >= 0 ? 'Booking completed on time' : 'Client no-show',
-					action_category: delta >= 0 ? 'service' : 'attendance',
-					action_type: delta >= 0 ? 'positive' : 'negative',
-					points_awarded: delta,
-					previous_score: prev,
-					new_score: score,
-					created_at: addDays(data.now, -i * 6).toISOString()
-				});
-			}
+			// the latest gifts, newest first, each raising the running total
+			const tipped = list.filter((b) => tipOf(b) > 0).sort((a, b) => a.date.localeCompare(b.date));
+			let running = 0;
+			const history = tipped
+				.map((b) => {
+					const prev = running;
+					running += tipOf(b);
+					return {
+						id: b.id,
+						action_name: fullName(state.userById(b.clientId)),
+						action_category: 'tip',
+						action_type: 'positive',
+						points_awarded: tipOf(b),
+						previous_score: prev,
+						new_score: running,
+						created_at: `${b.date}T${b.end_time}`
+					};
+				})
+				.reverse();
 			const agenda = data.agendas[shop.id] || [];
 			const weekStart = addDays(data.now, -((data.now.getDay() + 6) % 7));
 

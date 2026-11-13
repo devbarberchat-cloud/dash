@@ -1,0 +1,11 @@
+.bscore {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	white-space: nowrap;
+}
+.flame {
+	flex: none;
+	width: auto;
+	height: 0.9em;
+}

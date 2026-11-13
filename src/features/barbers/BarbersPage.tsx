@@ -5,7 +5,8 @@ import { useBarbers, type Barber } from '@/api/barbers';
 import { mediaUrl } from '@/api/http';
 import { useStaff } from '@/api/shops';
 import { useCurrentShop } from '@/app/shop-context';
-import { mad, minutes, pct, score } from '@/lib/format';
+import { mad, minutes, pct } from '@/lib/format';
+import { BarberScore } from '@/ui/BarberScore';
 import { Button, IconButton } from '@/ui/Button';
 import { ChipGroup, Empty, Failure } from '@/ui/controls';
 import { Select } from '@/ui/Field';
@@ -22,7 +23,7 @@ type Sort = 'revenue' | 'bookings' | 'score';
 const SORTS: Record<Sort, { label: string; key: (b: Barber) => number }> = {
 	revenue: { label: 'Chiffre d’affaires', key: (b) => Number(b.total_revenue ?? 0) },
 	bookings: { label: 'Réservations', key: (b) => b.total_bookings },
-	score: { label: 'Score', key: (b) => b.barber_score }
+	score: { label: 'BarberScore', key: (b) => Number(b.barber_score) }
 };
 
 /** The name the app shows: the staff first name when there is one, else the username. */
@@ -169,7 +170,7 @@ export function BarbersPage() {
 											<th scope="col" className="r">Chiffre d’affaires</th>
 											<th scope="col" className="r">Panier moyen</th>
 											<th scope="col" className="r">Durée moyenne</th>
-											<th scope="col" className="r">Score</th>
+											<th scope="col" className="r">BarberScore</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -189,7 +190,7 @@ export function BarbersPage() {
 													<td className="r">{mad(b.total_revenue)}</td>
 													<td className="r">{mad(b.average_revenue_per_booking)}</td>
 													<td className="r">{minutes(b.average_service_time)}</td>
-													<td className="r">{has ? score(b.barber_score) : '—'}</td>
+													<td className="r">{has ? <BarberScore value={b.barber_score} /> : '—'}</td>
 												</tr>
 											);
 										})}

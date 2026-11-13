@@ -646,7 +646,11 @@ export function buildDataset(now = new Date()) {
 					status === 'PAID' ? `INV-${shop.id}-${isoDate(start).replace(/-/g, '')}` : null,
 				created_at: addDays(end, 1).toISOString(),
 				updated_at: addDays(end, 4).toISOString(),
-				proof: null
+				// a week under review has the receipt the salon sent
+				proof:
+					status === 'PENDING_REVIEW'
+						? { filename: 'recu-virement.pdf', uploaded_at: addDays(end, 3).toISOString(), notes: '' }
+						: null
 			});
 		}
 	}

@@ -1,88 +1,355 @@
+/* what the salon owes BarberChat: the total on the brand dark, what is late in dark red, what is current in dark green */
+.pay-owed {
+	display: grid;
+	grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+.pay-card {
+	min-width: 0;
+	padding: 20px 22px;
+	border-radius: var(--r-list);
+	color: #fff;
+}
+.pay-card--total {
+	background: var(--indigo);
+}
+.pay-card--late {
+	background: #9b1c22;
+}
+.pay-card--current {
+	background: #0f5132;
+}
+.pay-card dt {
+	font-size: 14px;
+	color: rgb(255 255 255 / 0.75);
+}
+.pay-card dd {
+	margin-top: 4px;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 20px;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+}
+.pay-card--total dd {
+	font-weight: 700;
+	font-size: 30px;
+	letter-spacing: -0.02em;
+}
+/* narrower: the total takes the width, the two others share the line under it */
+@container page (max-width: 760px) {
+	.pay-owed {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.pay-card--total {
+		grid-column: 1 / -1;
+	}
+}
+@container page (max-width: 420px) {
+	.pay-owed {
+		gap: 8px;
+	}
+	.pay-card {
+		padding: 16px;
+	}
+	.pay-card dd {
+		font-size: 16px;
+	}
+	.pay-card--total dd {
+		font-size: 26px;
+	}
+}
+
 .pay {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
 }
-/* one card per week */
-.pay-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
-	gap: 16px;
-}
-.pay-card {
+.pay-filters {
 	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	padding: 18px 20px 16px;
-	border: 1px solid var(--line);
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.pay-year {
+	width: 112px;
+}
+.pay-none {
+	padding: 56px 16px;
+	border: 1px dashed var(--line);
+	border-radius: var(--r-list);
+	font-size: 14px;
+	text-align: center;
+	color: var(--muted);
+}
+
+/*
+ * the weeks as one ledger, in the same soft card as the app's other lists:
+ * column heads, then one line per week (the week, when it is due, the
+ * commission, its state), the figures lined up under their head.
+ */
+.pay-ledger {
+	/* one dark green for what is paid, one dark red for what is owed, one dark blue for what is being checked */
+	--paid: #0f5132;
+	--owed: #9b1c22;
+	--checking: #1e4a80;
+	--cols: minmax(0, 1fr) 176px 112px 112px 212px 32px;
+	overflow: hidden;
+	border: 1px solid #ebebef;
 	border-radius: var(--r-list);
 	background: var(--canvas);
+	box-shadow: var(--shadow-list);
 }
-.pay-card--overdue {
-	border-color: color-mix(in srgb, var(--bad) 35%, var(--line));
+.pay-head,
+.pay-row {
+	display: grid;
+	grid-template-columns: var(--cols);
+	grid-template-areas: 'week due amount state cta menu';
+	column-gap: 20px;
+	padding-inline: 22px;
 }
-.pay-top {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 10px;
-	font-family: var(--font-heading);
-}
-.pay-top b {
-	font-weight: 600;
-	font-size: 15px;
-}
-.pay-state {
-	display: inline-flex;
-	flex-shrink: 0;
-	align-items: center;
-	gap: 6px;
-	padding: 2px 8px;
-	border-radius: 6px;
-	background: var(--surface);
-	color: var(--ink);
-	font-family: var(--font-body);
-	font-size: 12px;
-	font-weight: 600;
-}
-.pay-state i {
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-}
-.pay-amount {
-	margin: 10px 0 0;
-	font-family: var(--font-heading);
-	font-weight: 700;
-	font-size: 26px;
-	letter-spacing: -0.02em;
-	white-space: nowrap;
-}
-.pay-when {
-	margin: 0;
-	font-size: 13.5px;
-	font-weight: 500;
-}
-.pay-when.is-late {
-	color: var(--bad);
-}
-.pay-detail {
-	margin: 0;
+.pay-head {
+	padding-block: 12px;
+	border-bottom: 1px solid var(--line-soft);
 	font-size: 13px;
 	color: var(--muted);
 }
-.pay-actions {
-	display: flex;
+.pay-h-week {
+	grid-area: week;
+}
+.pay-h-due {
+	grid-area: due;
+}
+.pay-h-amount {
+	grid-area: amount;
+	text-align: end;
+}
+.pay-h-state {
+	grid-area: state;
+}
+
+.pay-row {
+	position: relative;
 	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-	margin-top: auto;
-	padding-top: 14px;
+	padding-block: 16px;
+}
+.pay-row + .pay-row::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	inset-inline: 22px;
 	border-top: 1px solid var(--line-soft);
 }
-.pay-card > .pay-detail {
-	margin-bottom: 12px;
+.pay-week {
+	grid-area: week;
+	min-width: 0;
 }
+.pay-range {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 15px;
+	line-height: 1.35;
+	letter-spacing: -0.01em;
+}
+/* the week's dates open its document; the press reaches the whole line, under the buttons */
+.pay-open {
+	font: inherit;
+	color: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.pay-open::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+}
+.pay-open:focus-visible {
+	outline: none;
+}
+.pay-open:focus-visible::after {
+	outline: 2px solid var(--mauve);
+	outline-offset: -3px;
+	border-radius: var(--r-list);
+}
+.pay-detail {
+	margin-top: 2px;
+	font-size: 13.5px;
+	color: var(--muted);
+}
+/* on wide lines, when it is due and its state each take their column */
+.pay-when {
+	display: contents;
+}
+.pay-due {
+	grid-area: due;
+	font-size: 14px;
+	color: var(--muted);
+	white-space: nowrap;
+}
+.pay-due.is-late {
+	font-weight: 600;
+	color: var(--owed);
+}
+.pay-amount {
+	grid-area: amount;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 15.5px;
+	letter-spacing: -0.01em;
+	text-align: end;
+	white-space: nowrap;
+}
+/* the state: a small solid mark in its one dark colour */
+.pay-state {
+	grid-area: state;
+	justify-self: start;
+	padding: 3px 8px;
+	border-radius: 6px;
+	background: var(--checking);
+	color: #fff;
+	font-size: 12.5px;
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+}
+.pay-row--paid .pay-state {
+	background: var(--paid);
+}
+.pay-row--pending .pay-state,
+.pay-row--overdue .pay-state {
+	background: var(--owed);
+}
+.pay-cta {
+	grid-area: cta;
+	justify-self: end;
+}
+.pay-menu {
+	grid-area: menu;
+	justify-self: end;
+}
+.pay-cta,
+.pay-menu {
+	position: relative;
+	z-index: 1;
+}
+
+/* in between: the four columns stay; the proof button goes under the week */
+@container page (max-width: 1059px) {
+	.pay-ledger {
+		--cols: minmax(0, 1fr) 172px 108px 112px 32px;
+	}
+	.pay-head {
+		grid-template-areas: 'week due amount state .';
+	}
+	.pay-row {
+		grid-template-areas:
+			'week due amount state menu'
+			'cta cta cta cta cta';
+	}
+	.pay-cta {
+		justify-self: start;
+		margin-top: 12px;
+	}
+}
+
+/* narrow: no heads; the week and its commission on top, its state and when it is due under them */
+@container page (max-width: 640px) {
+	.pay-head {
+		display: none;
+	}
+	.pay-row {
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		grid-template-areas:
+			'range amount menu'
+			'detail detail .'
+			'when when when'
+			'cta cta cta';
+		column-gap: 12px;
+		padding: 14px 10px 14px 18px;
+	}
+	.pay-row + .pay-row::before {
+		inset-inline: 18px;
+	}
+	.pay-week {
+		display: contents;
+	}
+	.pay-range {
+		grid-area: range;
+	}
+	.pay-detail {
+		grid-area: detail;
+		margin-top: 4px;
+	}
+	.pay-amount {
+		align-self: baseline;
+	}
+	/* its state, then when it is due, side by side */
+	.pay-when {
+		grid-area: when;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 4px 10px;
+		margin-top: 10px;
+	}
+	.pay-state {
+		order: -1;
+	}
+	.pay-due {
+		font-size: 13.5px;
+	}
+	.pay-menu {
+		align-self: start;
+	}
+	.pay-cta {
+		margin-top: 12px;
+	}
+}
+/* on a phone the proof button takes the width */
+@container page (max-width: 420px) {
+	.pay-cta {
+		justify-self: stretch;
+	}
+	.pay-cta .btn {
+		width: 100%;
+	}
+}
+
 .pay-file {
 	font-size: 14px;
+}
+
+/* a week's document, shown as a sheet of paper in the side panel */
+.doc-frame,
+.doc-image {
+	display: block;
+	width: 100%;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: #fff;
+	box-shadow: var(--shadow-list);
+}
+.doc-frame {
+	aspect-ratio: 210 / 297;
+}
+.doc-facts {
+	margin-bottom: 14px;
+}
+.doc-facts dt {
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+.doc-facts dd {
+	margin-top: 2px;
+	font-size: 13.5px;
+	color: var(--muted);
+}
+.doc-none {
+	padding: 56px 16px;
+	border: 1px dashed var(--line);
+	border-radius: 10px;
+	font-size: 14px;
+	text-align: center;
+	color: var(--muted);
 }
